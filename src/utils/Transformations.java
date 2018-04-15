@@ -1,6 +1,6 @@
 package utils;
 
-public class Matrixs {
+public class Transformations {
 	 public static double[][] CreateScaleMatrix2D(double scaleX, double scaleY) {
 	        double scaleMatrix[][] = new double[3][3];
 	        scaleMatrix[0][0] = scaleX;
@@ -49,17 +49,10 @@ public class Matrixs {
 	 public static double[][] CreateTranslateBackMatrix2D(double translateX, double translateY) {
 	        return CreateTranslateMatrix2D(-translateX, -translateY);
 	 }
-	 public static double[][] CreateMatrix2D() {
-	        double initMatrix[][] = new double[3][3];
-	        initMatrix[0][0] = 1;
-	        initMatrix[0][1] = 0;
-	        initMatrix[0][2] = 0;
-	        initMatrix[1][0] = 0;
-	        initMatrix[1][1] = 1;
-	        initMatrix[1][2] = 0;
-	        initMatrix[2][0] = 0;
-	        initMatrix[2][1] = 0;
-	        initMatrix[2][2] = 1;
+	 public static double[][] CreateIdentityMatrix(int dim) {
+	        double initMatrix[][] = new double[dim][dim];
+	        for(int i = 0; i < dim; i++)
+	        	initMatrix[i][i] = 1;
 	        return initMatrix;
 	 }
 	 public static double[][] CreateVertexVector2D(double x, double y) {
