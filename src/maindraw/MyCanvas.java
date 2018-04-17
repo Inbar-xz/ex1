@@ -11,7 +11,7 @@ import java.awt.event.MouseMotionListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
-import utils.Matrixs;
+import utils.Transformation;
 import utils.Mathematics;
 import shape.Vertex;
 import shape.Edge;
@@ -31,7 +31,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	private double ww , wh , vw , vh;
 	private double[] vectorStart, vectorEnd;
 	private double[][] TrM, viewMatrix, CT, TT;
-	private double[][] vectorVertex, matrixTr1 , matrixRo, matrixTr2, matrixTr3, matrixSc1, matrixSc2;
+	private double[][] vectorVertex, matrixTr1 , matrixRo, matrixTr2, matrixTr3, Transformationc1, Transformationc2;
 	
 	public MyCanvas() {
 		File settings = new File(filenameSettings);
@@ -63,21 +63,21 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		}
 		
 		//for viewer matrix
-		matrixTr1 = Matrixs.CreateTranslateMatrix2D(-coordinateXCenterWindows, -coordinateYCenterWindows);
-		matrixRo = Matrixs.CreateRotateMatrix2D(-1 * Math.toRadians(direction));
-		matrixSc1 = Matrixs.CreateScaleMatrix2D(vw / ww, vh / wh);
-		matrixTr2 = Matrixs.CreateTranslateMatrix2D(20, 20);
-	    matrixSc2 = Matrixs.CreateScaleMatrix2D(1, -1);
-		matrixTr3 = Matrixs.CreateTranslateMatrix2D(0, vh + 40);
+		matrixTr1 = Transformation.CreateTranslateMatrix2D(-coordinateXCenterWindows, -coordinateYCenterWindows);
+		matrixRo = Transformation.CreateRotateMatrix2D(-1 * Math.toRadians(direction));
+		Transformationc1 = Transformation.CreateScaleMatrix2D(vw / ww, vh / wh);
+		matrixTr2 = Transformation.CreateTranslateMatrix2D(20, 20);
+	    Transformationc2 = Transformation.CreateScaleMatrix2D(1, -1);
+		matrixTr3 = Transformation.CreateTranslateMatrix2D(0, vh + 40);
 		
-		viewMatrix = Mathematics.multiplicateMatrix(matrixTr3, matrixSc2);	
+		viewMatrix = Mathematics.multiplicateMatrix(matrixTr3, Transformationc2);	
 		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, matrixTr2);
-		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, matrixSc1);
+		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, Transformationc1);
 		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, matrixRo);
 		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, matrixTr1);
 		
-		TT = Matrixs.CreateMatrix2D();
-		CT = Matrixs.CreateMatrix2D();
+		TT = Transformation.CreateIdentityMatrix(3);
+		CT = Transformation.CreateIdentityMatrix(3);
 		vectorVertex = new double [3][1];
 		setSize((int)vw + 40, (int)vh + 40);
 		centerX = (vw / 2) + 20;
@@ -107,7 +107,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 				System.out.println(vertexX);
 				vertexY = scan.nextDouble();
 				System.out.println(vertexY);
-			    vectorVertex = Matrixs.CreateVertexVector2D(vertexX, vertexY);
+			    vectorVertex = Transformation.vertexToVector2D(new Vertex(vertexX, vertexY));
 			    vectorVertex = Mathematics.multiplicateMatrix(TrM, vectorVertex);
 			    vertexX = vectorVertex[0][0] + 20;
 			    vertexY = vectorVertex[1][0] + 20;
@@ -181,11 +181,11 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		 radiusPStart = Mathematics.distance(pStart, centerX, centerY);
 		 radiusPEnd = Mathematics.distance(pEnd, centerX, centerY);
 		 scaleParameter = radiusPEnd / radiusPStart;
-		 CT = Matrixs.CreateScaleMatrix2D(scaleParameter, scaleParameter);
+		 CT = Transformation.CreateScaleMatrix2D(scaleParameter, scaleParameter);
 		 CT = Mathematics.multiplicateMatrix
 				 (Mathematics.multiplicateMatrix
-						 (Matrixs.CreateTranslateMatrix2D(centerX, centerY), CT)
-						 , Matrixs.CreateTranslateMatrix2D(-centerX, -centerY));
+						 (Transformation.CreateTranslateMatrix2D(centerX, centerY), CT)
+						 , Transformation.CreateTranslateMatrix2D(-centerX, -centerY));
 	}
 	public void executeRotate() {
 		 vectorStart[0] = pStart.getX() - centerX;
@@ -195,15 +195,15 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		 double angleStart = getAngleFromVectorToXAxis(vectorStart);
 		 double angleEnd = getAngleFromVectorToXAxis(vectorEnd);
 		 double angleFinish = angleStart - angleEnd;
-		 CT = Matrixs.CreateRotateMatrix2D(Math.toRadians(angleFinish));
+		 CT = Transformation.CreateRotateMatrix2D(Math.toRadians(angleFinish));
 		 CT = Mathematics.multiplicateMatrix
 				 (Mathematics.multiplicateMatrix
-						 (Matrixs.CreateTranslateMatrix2D(centerX, centerY), CT)
-						 , Matrixs.CreateTranslateMatrix2D(-centerX, -centerY));
+						 (Transformation.CreateTranslateMatrix2D(centerX, centerY), CT)
+						 , Transformation.CreateTranslateMatrix2D(-centerX, -centerY));
 	}
 	public void executeAction(String type) {
 		switch(type) {
-		 case "T":  CT = Matrixs.CreateTranslateMatrix2D(pEnd.getX() - pStart.getX(),
+		 case "T":  CT = Transformation.CreateTranslateMatrix2D(pEnd.getX() - pStart.getX(),
 					pEnd.getY() - pStart.getY());
          break;
 		 case "SD": executeScale();
@@ -258,7 +258,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		System.out.println(pEnd.getY());
 		executeAction(locationTranspormation);
 		TT = Mathematics.multiplicateMatrix(CT, TT);
-		CT = Matrixs.CreateMatrix2D();
+		CT = Transformation.CreateIdentityMatrix(3);
 		this.repaint();
 	}
 	@Override
