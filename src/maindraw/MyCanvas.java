@@ -297,6 +297,10 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 						 , Transformation.CreateTranslateMatrix2D(-centerX, -centerY));
 	}
 	
+	/**
+	 * execute transformation by type
+	 * @param type
+	 */
 	public void executeAction(String type) {
 		switch(type) {
 		 case "T":  currentTrans = Transformation.CreateTranslateMatrix2D(pEnd.getX() - pStart.getX(),
@@ -319,15 +323,19 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	
 	@Override
 	public void mousePressed(MouseEvent arg0) {
-		// TODO Auto-generated method stub
+		
+		//save the start point and get the transformation type 
 		pStart = arg0.getPoint();
 		transType = getTransType(pStart);
 	}
 	@Override
 	public void mouseReleased(MouseEvent arg0) {
-		// TODO Auto-generated method stub
+
+		//save the end point, get the transformation type
 		pEnd = arg0.getPoint();
 		executeAction(transType);
+		
+		//save the new total transformation and initialization the currentTrans
 		totalTrans = Mathematics.multiplicateMatrix(currentTrans, totalTrans);
 		currentTrans = Transformation.CreateIdentityMatrix(3);
 		this.repaint();
@@ -338,6 +346,8 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		pEnd = arg0.getPoint();
 		System.out.println(pEnd.getX());
 		System.out.println(pEnd.getY());
+		
+		//if in range
 		if((pStart.getX() >= margins) && (pStart.getX() <= viewWidth + margins)
 				&& (pStart.getY() >= margins) && (pStart.getY() <= viewWidth + margins))
 			executeAction(transType);
