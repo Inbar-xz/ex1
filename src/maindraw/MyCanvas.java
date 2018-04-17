@@ -23,21 +23,26 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	public static final String scnFile = "example.scn.txt";
 	public static final String viwFile = "example.viw.txt";
 	
-	private String locationTranspormation;
+	private String transType;
 	private Point pStart, pEnd;
-	private double centerX , centerY, radiusPStart, radiusPEnd, scaleParameter;
-	private double sepertation = 83 + 1/3;
-	private double ww , wh , vw , vh;
+	private int margins = 20;
+	private double centerX , centerY;
+	private double viewWidth , viewHigh;
 	private double[] vectorStart, vectorEnd;
-	private double[][] vectorVertex, TrM, viewMatrix, currentTrans, totalTrans;
+	private double[][] viewMatrix, currentTrans, totalTrans;
 	private Vertex verticesList[], verticesDraw[];
 	private Edge edgesList[];
 	
+	/**
+	 * constructor. read data from files, create the view matrix,
+	 * and initialize basis parameters.
+	 */
 	public MyCanvas() {
 		
 		double coordinateXCenterWindows = 0, coordinateYCenterWindows = 0;
 		double direction = 0;
 		double[][] matrixTr1 , matrixRo, matrixTr2, matrixTr3, Transformationc1, Transformationc2;
+		double windowWidth = 0, windowHigh = 0;
 		
 		//read the view file to create the view matrix
 		File viewFile = new File(viwFile);
@@ -50,22 +55,12 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 			setScan.next();
 			direction = setScan.nextDouble();
 			setScan.next();
-			ww = setScan.nextDouble();
-			wh = setScan.nextDouble();
+			windowWidth = setScan.nextDouble();
+			windowHigh = setScan.nextDouble();
 			setScan.next();
-			vw = setScan.nextDouble();
-			vh = setScan.nextDouble();
+			viewWidth = setScan.nextDouble();
+			viewHigh = setScan.nextDouble();
 			setScan.close();
-			
-			//check
-			System.out.println(coordinateXCenterWindows);
-			System.out.println(coordinateYCenterWindows);
-			System.out.println(direction);
-			System.out.println(ww);
-			System.out.println(wh);
-			System.out.println(vw);
-			System.out.println(vh);
-			
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -74,10 +69,10 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		//create the view matrix
 		matrixTr1 = Transformation.CreateTranslateMatrix2D(-coordinateXCenterWindows, -coordinateYCenterWindows);
 		matrixRo = Transformation.CreateRotateMatrix2D(-1 * Math.toRadians(direction));
-		Transformationc1 = Transformation.CreateScaleMatrix2D(vw / ww, vh / wh);
+		Transformationc1 = Transformation.CreateScaleMatrix2D(viewWidth / windowWidth, viewHigh / windowHigh);
 		matrixTr2 = Transformation.CreateTranslateMatrix2D(20, 20);
 	    Transformationc2 = Transformation.CreateScaleMatrix2D(1, -1);
-		matrixTr3 = Transformation.CreateTranslateMatrix2D(0, vh + 40);
+		matrixTr3 = Transformation.CreateTranslateMatrix2D(0, viewHigh + 40);
 		
 		viewMatrix = Mathematics.multiplicateMatrix(matrixTr3, Transformationc2);	
 		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, matrixTr2);
@@ -90,14 +85,14 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		currentTrans = Transformation.CreateIdentityMatrix(3);
 		
 		//set the center vertex
-		centerX = (vw / 2) + 20;
-		centerY = (vh / 2) + 20;
-				
-		setSize((int)vw + 40, (int)vh + 40);
+		centerX = (viewWidth / 2) + margins;
+		centerY = (viewHigh / 2) + margins;
 		
-		vectorVertex = new double [3][1];
+		//set the first click point and the end click point
 		vectorStart = new double[2];
 		vectorEnd = new double[2];
+		
+		setSize((int)viewWidth + 40, (int)viewHigh + 40);
 		
 		//read the vertices and the edges for the file
 		File screenFile = new File(scnFile);
@@ -132,26 +127,35 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		addMouseMotionListener(this);
 	}
 	
+	/**
+	 * this function draw the list of vertices and the edges
+	 * after the translations
+	 * @param g
+	 * @return
+	 */
 	public void paint(Graphics g) {
 		
 		double vertexX, vertexY;
+		double[][] transMatrix;
 		
-		TrM = Mathematics.multiplicateMatrix(currentTrans, totalTrans);
-		TrM = Mathematics.multiplicateMatrix(TrM, viewMatrix);
+		//mult all the translations
+		transMatrix = Mathematics.multiplicateMatrix(currentTrans, totalTrans);
+		transMatrix = Mathematics.multiplicateMatrix(transMatrix, viewMatrix);
 		
 		//apply changes on the vertices in verticesDraw, using the origin vertices in verticesList
 		int verticesNum = verticesList.length;
+		double[][] vectorVertex = new double [3][1];
 		for (int i = 0; i < verticesNum; i++) {
 			vectorVertex = Transformation.vertexToVector2D(verticesList[i]);
-		    vectorVertex = Mathematics.multiplicateMatrix(TrM, vectorVertex);
-		    vertexX = vectorVertex[0][0] + 20;
-		    vertexY = vectorVertex[1][0] + 20;
+		    vectorVertex = Mathematics.multiplicateMatrix(transMatrix, vectorVertex);
+		    vertexX = vectorVertex[0][0] + margins;
+		    vertexY = vectorVertex[1][0] + margins;
 		    verticesDraw[i].setX(vertexX);
 		    verticesDraw[i].setY(vertexY);
 		}
 		
 		//draw the new vertices and edges
-		g.drawRect(20, 20, (int)vw, (int)vh);
+		g.drawRect(margins, margins, (int)viewWidth, (int)viewHigh);
 		Polygon p = new Polygon();
 		int edgesNum = edgesList.length;
 		for (int i = 0; i < edgesNum; i++) {
@@ -178,7 +182,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 				System.out.println(vertexY);
 			    
 				vectorVertex = Transformation.vertexToVector2D(new Vertex(vertexX, vertexY));
-			    vectorVertex = Mathematics.multiplicateMatrix(TrM, vectorVertex);
+			    vectorVertex = Mathematics.multiplicateMatrix(transMatrix, vectorVertex);
 			    vertexX = vectorVertex[0][0] + 20;
 			    vertexY = vectorVertex[1][0] + 20;
 				vertexs[i] = new Vertex(vertexX,vertexY);
@@ -187,7 +191,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 			//read the edges and draw
 			int sizeEdge = scan.nextInt();
 			System.out.println(sizeEdge);
-			g.drawRect(20, 20, (int)vw, (int)vh);
+			g.drawRect(20, 20, (int)viewWidth, (int)viewHigh);
 			Polygon p = new Polygon();
 			Edge edges[] = new Edge[sizeEdge];
 			
@@ -206,31 +210,43 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 			e1.printStackTrace();
 		}*/
 	}
-	public String getTypeTranspormaton(Point point) {
-		//the limits of screen is 20 - 270
+	
+	/**
+	 * get point and return the type of transformation that will
+	 * be create.
+	 * @param point
+	 * @return
+	 */
+	public String getTransType(Point point) {
+		
+		//the limits of screen is [margins - (margins+viewWidth)] in this case [20 - 270]
+		double sepertation = viewWidth / 3;
 		String type = "";
-		if((pStart.getX() >= 20) && (pStart.getX() <= 270)
-				&& (pStart.getY() >= 20) && (pStart.getY() <= 270)) { 
-			if(pStart.getX() <= 20 + sepertation) {
-				if(pStart.getY() <= 20 + sepertation) {
+		
+		//if click in the right range (margins <-> viewWidth) then check transType
+		if((pStart.getX() >= margins) && (pStart.getX() <= viewWidth + margins)
+				&& (pStart.getY() >= margins) && (pStart.getY() <= viewWidth + margins)) {
+			
+			if(pStart.getX() <= margins + sepertation) {
+				if(pStart.getY() <= margins + sepertation) {
 					type = "RLU";
-				} else if(pStart.getY() <= 20 + (sepertation * 2)) {
+				} else if(pStart.getY() <= margins + (sepertation * 2)) {
 					type = "SL";
 				} else {
 					type = "RLD";
 				}	
-			} else if(pStart.getX() <= 20 + (sepertation * 2)) {
-				if(pStart.getY() <= 20 + sepertation) {
+			} else if(pStart.getX() <= margins + (sepertation * 2)) {
+				if(pStart.getY() <= margins + sepertation) {
 					type = "SU";
-				} else if(pStart.getY() <= 20 + (sepertation * 2)) {
+				} else if(pStart.getY() <= margins + (sepertation * 2)) {
 					type = "T";
 				} else {
 					type = "SD";
 				}
 			} else {
-				if(pStart.getY() <= 20 + sepertation) {
+				if(pStart.getY() <= margins + sepertation) {
 					type = "RRU";
-				} else if(pStart.getY() <= 20 + (sepertation * 2)) {
+				} else if(pStart.getY() <= margins + (sepertation * 2)) {
 					type = "SR";
 				} else {
 					type = "RRD";
@@ -239,6 +255,12 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		}
 		return type;
 	}
+	
+	/**
+	 * get the angle from the vector to x axis
+	 * @param vector
+	 * @return
+	 */
 	public double getAngleFromVectorToXAxis(double[] vector) {
 		double angle;
 		float RAD2DEG = 180.0f / 3.14159f;
@@ -247,16 +269,19 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		if (angle < 0) angle += 360.0f;
 		return angle;
 	}
+	
 	public void executeScale() {
-		 radiusPStart = Mathematics.distance(pStart, centerX, centerY);
-		 radiusPEnd = Mathematics.distance(pEnd, centerX, centerY);
-		 scaleParameter = radiusPEnd / radiusPStart;
-		 currentTrans = Transformation.CreateScaleMatrix2D(scaleParameter, scaleParameter);
-		 currentTrans = Mathematics.multiplicateMatrix
-				 (Mathematics.multiplicateMatrix
-						 (Transformation.CreateTranslateMatrix2D(centerX, centerY), currentTrans)
-						 , Transformation.CreateTranslateMatrix2D(-centerX, -centerY));
+		double radiusPStart, radiusPEnd, scaleParameter;
+		radiusPStart = Mathematics.distance(pStart, centerX, centerY);
+		radiusPEnd = Mathematics.distance(pEnd, centerX, centerY);
+		scaleParameter = radiusPEnd / radiusPStart;
+		currentTrans = Transformation.CreateScaleMatrix2D(scaleParameter, scaleParameter);
+		currentTrans = Mathematics.multiplicateMatrix
+			 (Mathematics.multiplicateMatrix
+					 (Transformation.CreateTranslateMatrix2D(centerX, centerY), currentTrans)
+					 , Transformation.CreateTranslateMatrix2D(-centerX, -centerY));
 	}
+	
 	public void executeRotate() {
 		 vectorStart[0] = pStart.getX() - centerX;
 		 vectorStart[1] = pStart.getY() - centerY;
@@ -271,31 +296,54 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 						 (Transformation.CreateTranslateMatrix2D(centerX, centerY), currentTrans)
 						 , Transformation.CreateTranslateMatrix2D(-centerX, -centerY));
 	}
+	
 	public void executeAction(String type) {
 		switch(type) {
 		 case "T":  currentTrans = Transformation.CreateTranslateMatrix2D(pEnd.getX() - pStart.getX(),
 					pEnd.getY() - pStart.getY());
          break;
-		 case "SD": executeScale();
-		 break;
-		 case "SU": executeScale();
-	     break;
-		 case "SL": executeScale();
-	     break;
+		 case "SD":
+		 case "SU":
+		 case "SL":
 		 case "SR": executeScale();
 		 break;
-		 case "RLU": executeRotate();
-		 break;
-		 case "RLD": executeRotate();
-		 break;
-		 case "RRU": executeRotate();
-		 break;
+		 case "RLU":
+		 case "RLD":
+		 case "RRU":
 		 case "RRD": executeRotate();
 		 break;
 		 default: 
          break;
 		}
 	}
+	
+	@Override
+	public void mousePressed(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		pStart = arg0.getPoint();
+		transType = getTransType(pStart);
+	}
+	@Override
+	public void mouseReleased(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		pEnd = arg0.getPoint();
+		executeAction(transType);
+		totalTrans = Mathematics.multiplicateMatrix(currentTrans, totalTrans);
+		currentTrans = Transformation.CreateIdentityMatrix(3);
+		this.repaint();
+	}
+	@Override
+	public void mouseDragged(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		pEnd = arg0.getPoint();
+		System.out.println(pEnd.getX());
+		System.out.println(pEnd.getY());
+		if((pStart.getX() >= margins) && (pStart.getX() <= viewWidth + margins)
+				&& (pStart.getY() >= margins) && (pStart.getY() <= viewWidth + margins))
+			executeAction(transType);
+		this.repaint();
+	}
+	
 	@Override
 	public void mouseClicked(MouseEvent arg0) {
 		// TODO Auto-generated method stub
@@ -310,37 +358,6 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	public void mouseExited(MouseEvent arg0) {
 		// TODO Auto-generated method stub
 		
-	}
-	@Override
-	public void mousePressed(MouseEvent arg0) {
-		// TODO Auto-generated method stub
-		pStart = arg0.getPoint();
-		System.out.println(pStart.getX());
-		System.out.println(pStart.getY());
-		locationTranspormation =  getTypeTranspormaton(pStart);
-		//System.out.println(locationTranspormation);
-	}
-	@Override
-	public void mouseReleased(MouseEvent arg0) {
-		// TODO Auto-generated method stub
-		pEnd = arg0.getPoint();
-		System.out.println(pEnd.getX());
-		System.out.println(pEnd.getY());
-		executeAction(locationTranspormation);
-		totalTrans = Mathematics.multiplicateMatrix(currentTrans, totalTrans);
-		currentTrans = Transformation.CreateIdentityMatrix(3);
-		this.repaint();
-	}
-	@Override
-	public void mouseDragged(MouseEvent arg0) {
-		// TODO Auto-generated method stub
-		pEnd = arg0.getPoint();
-		System.out.println(pEnd.getX());
-		System.out.println(pEnd.getY());
-		if((pStart.getX() >= 20) && (pStart.getX() <= 270)
-				&& (pStart.getY() >= 20) && (pStart.getY() <= 270))
-			executeAction(locationTranspormation);
-		this.repaint();
 	}
 	@Override
 	public void mouseMoved(MouseEvent arg0) {
