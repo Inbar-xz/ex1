@@ -3,106 +3,118 @@ package maindraw;
 import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Point;
 import java.awt.Polygon;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
-import utils.Transformations;
+import utils.Matrixs;
 import utils.Mathematics;
 import shape.Vertex;
 import shape.Edge;
-
-public class MyCanvas extends Canvas{
+public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListener{
 
 	private static final long serialVersionUID = 1L;
-	
-	//data file for the view and the screen
-	public static final String scnFile = "example.scn.txt";
-	public static final String viwFile = "example.viw.txt";
-	
-	private int coordinateXCenterWindows, coordinateYCenterWindows;
+	public static final String filename = "example.scn.txt"; //name of file to read data from.
+	public static final String filenameSettings = "example.viw.txt"; //name of file to read data from.
+	private String locationTranspormation;
+	private Point pStart, pEnd;
+	private double centerX , centerY, radiusPStart, radiusPEnd, scaleParameter;
+	private double vertexX,vertexY;
+	private double coordinateXCenterWindows, coordinateYCenterWindows;
 	private double direction;
-	private int windowWidth , windowHigh , viewWidth , viewHigh;
-	private double[][] transMatrix, viewMatrix, currentTrans, totalTrans;
-	private double[][] matrixTr1 , matrixRo, matrixTr2, matrixTr3, matrixSc1, matrixSc2;
-	
+	private double sepertation = 83 + 1/3;
+	private double ww , wh , vw , vh;
+	private double[] vectorStart, vectorEnd;
+	private double[][] TrM, viewMatrix, CT, TT;
+	private double[][] vectorVertex, matrixTr1 , matrixRo, matrixTr2, matrixTr3, matrixSc1, matrixSc2;
 	public MyCanvas() {
-		
-		//get the data from the view file
-		File viewFile = new File(viwFile);
+		File settings = new File(filenameSettings);
 		Scanner setScan;
 		try {
-			setScan = new Scanner(viewFile);
+			setScan = new Scanner(settings);
 			setScan.next();
-			coordinateXCenterWindows = setScan.nextInt();
-			coordinateYCenterWindows = setScan.nextInt();
+			coordinateXCenterWindows = setScan.nextDouble();
+			System.out.println(coordinateXCenterWindows);
+			coordinateYCenterWindows = setScan.nextDouble();
+			System.out.println(coordinateYCenterWindows);
 			setScan.next();
 			direction = setScan.nextDouble();
-			setScan.next();
-			windowWidth = setScan.nextInt();
-			windowHigh = setScan.nextInt();
-			setScan.next();
-			viewWidth = setScan.nextInt();
-			viewHigh = setScan.nextInt();
-			setScan.close();
-			
-			//check
-			System.out.println(coordinateXCenterWindows);
-			System.out.println(coordinateYCenterWindows);
 			System.out.println(direction);
-			System.out.println(windowWidth);
-			System.out.println(windowHigh);
-			System.out.println(viewWidth);
-			System.out.println(viewHigh);
-			
+			setScan.next();
+			ww = setScan.nextDouble();
+			System.out.println(ww);
+			wh = setScan.nextDouble();
+			System.out.println(wh);
+			setScan.next();
+			vw = setScan.nextDouble();
+			System.out.println(vw);
+			vh = setScan.nextDouble();
+			System.out.println(vh);
+			setScan.close();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		//create the view matrix
-		matrixTr1 = Transformations.CreateTranslateMatrix2D(-coordinateXCenterWindows, -coordinateYCenterWindows);
-		matrixRo = Transformations.CreateRotateMatrix2D(-direction);
-		matrixSc1 = Transformations.CreateScaleMatrix2D(viewWidth / windowWidth, viewHigh / windowHigh);
-		matrixTr2 = Transformations.CreateTranslateMatrix2D(20, 20); //margin of 20
-	    matrixSc2 = Transformations.CreateScaleMatrix2D(1, -1);
-		matrixTr3 = Transformations.CreateTranslateMatrix2D(0, viewHigh + 40);
+		//for viewer matrix
+		matrixTr1 = Matrixs.CreateTranslateMatrix2D(-coordinateXCenterWindows, -coordinateYCenterWindows);
+		matrixRo = Matrixs.CreateRotateMatrix2D(-1 * Math.toRadians(direction));
+		matrixSc1 = Matrixs.CreateScaleMatrix2D(vw / ww, vh / wh);
+		matrixTr2 = Matrixs.CreateTranslateMatrix2D(20, 20);
+	    matrixSc2 = Matrixs.CreateScaleMatrix2D(1, -1);
+		matrixTr3 = Matrixs.CreateTranslateMatrix2D(0, vh + 40);
+		TT = Matrixs.CreateMatrix2D();
+		CT = Matrixs.CreateMatrix2D();
+		vectorVertex = new double [3][1];
+		setSize((int)vw + 40, (int)vh + 40);
+		centerX = (vw / 2) + 20;
+		centerY = (vh / 2) + 20;
+		vectorStart = new double[2];
+		vectorEnd = new double[2];
+		addMouseListener(this);
+		addMouseMotionListener(this);
+	}
+	public void paint(Graphics g) {
+	//	matrixSc1 = Mathematics.multiplicateMatrix(
+	//			Mathematics.multiplicateMatrix(Matrixs.CreateTranslateMatrix2D(-20, -20),
+	//					matrixSc1), Matrixs.CreateTranslateMatrix2D(20, 20));
+	//	matrixSc2 = Mathematics.multiplicateMatrix(
+	//			Mathematics.multiplicateMatrix(Matrixs.CreateTranslateMatrix2D(-20, -20),
+	//					matrixSc2), Matrixs.CreateTranslateMatrix2D(20, 20));
+	//	matrixRo = Mathematics.multiplicateMatrix(
+	//			Mathematics.multiplicateMatrix(Matrixs.CreateTranslateMatrix2D(-20, -20),
+	//					Matrixs.CreateRotateBackMatrix2D(direction)), Matrixs.CreateTranslateMatrix2D(20, 20));
 		viewMatrix = Mathematics.multiplicateMatrix(matrixTr3, matrixSc2);	
 		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, matrixTr2);
 		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, matrixSc1);
 		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, matrixRo);
 		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, matrixTr1);
-		 
-		//init the TotalTrans matrix and the CurrentTrans matrix
-		totalTrans = Transformations.CreateIdentityMatrix(3);
-		currentTrans = Transformations.CreateIdentityMatrix(3);
-		
-		setSize(viewWidth + 40, viewHigh + 40);
-	}
-	public void paint(Graphics g) {
-		double vertexX, vertexY, tempX = 0, tempY = 0;
-		//mult all the transformations with the view matrix
-		transMatrix = Mathematics.multiplicateMatrix(currentTrans, totalTrans);
-		transMatrix = Mathematics.multiplicateMatrix(transMatrix, viewMatrix);
-		
-		//read data from the screen file
-		File screenFile = new File(scnFile);
+		TrM = Mathematics.multiplicateMatrix(CT, TT);
+		TrM = Mathematics.multiplicateMatrix(TrM, viewMatrix);
+		//read from file
+		File fileName1 = new File(filename);
 		try {
-			Scanner scan = new Scanner(screenFile);
-			int verticesNum = scan.nextInt();
-			Vertex vertexs[] = new Vertex[verticesNum];
-			
-			//read the vertices and apply the transformation
-			for (int i = 0; i < verticesNum; i++) { 
+			Scanner scan = new Scanner(fileName1);
+			int sizeVertex = scan.nextInt();
+			System.out.println(sizeVertex);
+			Vertex vertexs[] = new Vertex[sizeVertex];
+			for (int i = 0; i < sizeVertex; i++) { 
 				vertexX = scan.nextDouble();
+				System.out.println(vertexX);
 				vertexY = scan.nextDouble();
-			    tempX = (vertexX * transMatrix[0][0]) + (vertexY * transMatrix[0][1]) + transMatrix[0][2];
-			    tempY = (vertexX * transMatrix[1][0]) + (vertexY * transMatrix[1][1]) + transMatrix[1][2];
-				vertexs[i] = new Vertex(tempX,tempY);
+				System.out.println(vertexY);
+			    vectorVertex = Matrixs.CreateVertexVector2D(vertexX, vertexY);
+			    vectorVertex = Mathematics.multiplicateMatrix(TrM, vectorVertex);
+			    vertexX = vectorVertex[0][0] + 20;
+			    vertexY = vectorVertex[1][0] + 20;
+				vertexs[i] = new Vertex(vertexX,vertexY);
 			}
 			int sizeEdge = scan.nextInt();
 			System.out.println(sizeEdge);
-			g.drawRect(20, 20, viewWidth, viewHigh);
+			g.drawRect(20, 20, (int)vw, (int)vh);
 			Polygon p = new Polygon();
 			Edge edges[] = new Edge[sizeEdge];
 			for (int i = 0; i < sizeEdge; i++) {
@@ -119,5 +131,146 @@ public class MyCanvas extends Canvas{
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
+	}
+	public String getTypeTranspormaton(Point point) {
+		//the limits of screen is 20 - 270
+		String type = "";
+		if((pStart.getX() >= 20) && (pStart.getX() <= 270)
+				&& (pStart.getY() >= 20) && (pStart.getY() <= 270)) { 
+			if(pStart.getX() <= 20 + sepertation) {
+				if(pStart.getY() <= 20 + sepertation) {
+					type = "RLU";
+				} else if(pStart.getY() <= 20 + (sepertation * 2)) {
+					type = "SL";
+				} else {
+					type = "RLD";
+				}	
+			} else if(pStart.getX() <= 20 + (sepertation * 2)) {
+				if(pStart.getY() <= 20 + sepertation) {
+					type = "SU";
+				} else if(pStart.getY() <= 20 + (sepertation * 2)) {
+					type = "T";
+				} else {
+					type = "SD";
+				}
+			} else {
+				if(pStart.getY() <= 20 + sepertation) {
+					type = "RRU";
+				} else if(pStart.getY() <= 20 + (sepertation * 2)) {
+					type = "SR";
+				} else {
+					type = "RRD";
+				}
+			}
+		}
+		return type;
+	}
+	public double getAngleFromVectorToXAxis(double[] vector) {
+		double angle;
+		float RAD2DEG = 180.0f / 3.14159f;
+		// atan2 receives first Y second X
+		angle = Math.atan2(vector[1], vector[0]) * RAD2DEG;
+		if (angle < 0) angle += 360.0f;
+		return angle;
+	}
+	public void executeScale() {
+		 radiusPStart = Mathematics.distance(pStart, centerX, centerY);
+		 radiusPEnd = Mathematics.distance(pEnd, centerX, centerY);
+		 scaleParameter = radiusPEnd / radiusPStart;
+		 CT = Matrixs.CreateScaleMatrix2D(scaleParameter, scaleParameter);
+		 CT = Mathematics.multiplicateMatrix
+				 (Mathematics.multiplicateMatrix
+						 (Matrixs.CreateTranslateMatrix2D(centerX, centerY), CT)
+						 , Matrixs.CreateTranslateMatrix2D(-centerX, -centerY));
+	}
+	public void executeRotate() {
+		 vectorStart[0] = pStart.getX() - centerX;
+		 vectorStart[1] = pStart.getY() - centerY;
+		 vectorEnd[0] = pEnd.getX() - centerX;
+		 vectorEnd[1] = pEnd.getY() - centerY;
+		 double angleStart = getAngleFromVectorToXAxis(vectorStart);
+		 double angleEnd = getAngleFromVectorToXAxis(vectorEnd);
+		 double angleFinish = angleStart - angleEnd;
+		 CT = Matrixs.CreateRotateMatrix2D(Math.toRadians(angleFinish));
+		 CT = Mathematics.multiplicateMatrix
+				 (Mathematics.multiplicateMatrix
+						 (Matrixs.CreateTranslateMatrix2D(centerX, centerY), CT)
+						 , Matrixs.CreateTranslateMatrix2D(-centerX, -centerY));
+	}
+	public void executeAction(String type) {
+		switch(type) {
+		 case "T":  CT = Matrixs.CreateTranslateMatrix2D(pEnd.getX() - pStart.getX(),
+					pEnd.getY() - pStart.getY());
+         break;
+		 case "SD": executeScale();
+		 break;
+		 case "SU": executeScale();
+	     break;
+		 case "SL": executeScale();
+	     break;
+		 case "SR": executeScale();
+		 break;
+		 case "RLU": executeRotate();
+		 break;
+		 case "RLD": executeRotate();
+		 break;
+		 case "RRU": executeRotate();
+		 break;
+		 case "RRD": executeRotate();
+		 break;
+		 default: 
+         break;
+		}
+	}
+	@Override
+	public void mouseClicked(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void mouseEntered(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void mouseExited(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void mousePressed(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		pStart = arg0.getPoint();
+		System.out.println(pStart.getX());
+		System.out.println(pStart.getY());
+		locationTranspormation =  getTypeTranspormaton(pStart);
+		//System.out.println(locationTranspormation);
+	}
+	@Override
+	public void mouseReleased(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		pEnd = arg0.getPoint();
+		System.out.println(pEnd.getX());
+		System.out.println(pEnd.getY());
+		executeAction(locationTranspormation);
+		TT = Mathematics.multiplicateMatrix(CT, TT);
+		CT = Matrixs.CreateMatrix2D();
+		this.repaint();
+	}
+	@Override
+	public void mouseDragged(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		pEnd = arg0.getPoint();
+		System.out.println(pEnd.getX());
+		System.out.println(pEnd.getY());
+		if((pStart.getX() >= 20) && (pStart.getX() <= 270)
+				&& (pStart.getY() >= 20) && (pStart.getY() <= 270))
+			executeAction(locationTranspormation);
+		this.repaint();
+	}
+	@Override
+	public void mouseMoved(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
 	}
 }

@@ -1,4 +1,7 @@
 package utils;
+
+import java.awt.Point;
+
 /**
  * Math functions class.
  */
@@ -24,7 +27,15 @@ public class Mathematics {
     public static boolean isBetween(double num1, double var, double num2) {
         return (num1 <= var && var <= num2) || (num2 <= var && var <= num1);
     }
-
+    /**
+     * calculate the distance between two points.
+     * @param other is second point.
+     * @return distance
+     */
+    public static double distance(Point p1, double x, double y) {
+        return Math.sqrt(Math.pow(p1.getX() - x, 2)
+                    + Math.pow(p1.getY() - y, 2));
+    }
     /**
      * Return a^2 + b^2.
      *

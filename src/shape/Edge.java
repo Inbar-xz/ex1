@@ -21,18 +21,11 @@ public class Edge {
         return false;
     }
     /**
-     * return the value of first vertex.
+     * return the exist v1.
      * @return v1
      */
     public Vertex getV1() {
         return this.v1;
-    }
-    /**
-     * return the value of second vertex.
-     * @return v2
-     */
-    public Vertex getV2() {
-        return this.v2;
     }
     /**
      * change the value of v1.
@@ -48,7 +41,13 @@ public class Edge {
     public void setV2(Vertex newV2) {
         this.v2 = newV2;
     }
-    
+    /**
+     * return the value of second vertex.
+     * @return v2
+     */
+    public Vertex getV2() {
+        return this.v2;
+    }
    // public Polygon createEdge() {
    // 	
    // }

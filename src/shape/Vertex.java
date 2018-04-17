@@ -21,18 +21,11 @@ public class Vertex {
         return false;
     }
     /**
-     * return the value of x.
+     * return the exist x.
      * @return x
      */
     public double getX() {
         return this.x;
-    }
-    /**
-     * return the value of y.
-     * @return y
-     */
-    public double getY() {
-        return this.y;
     }
     /**
      * change the value of x.
@@ -47,5 +40,12 @@ public class Vertex {
      */
     public void setY(double newY) {
         this.y = newY;
+    }
+    /**
+     * return the value of y.
+     * @return y
+     */
+    public double getY() {
+        return this.y;
     }
 }
