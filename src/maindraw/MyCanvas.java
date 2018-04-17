@@ -15,6 +15,7 @@ import utils.Matrixs;
 import utils.Mathematics;
 import shape.Vertex;
 import shape.Edge;
+
 public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListener{
 
 	private static final long serialVersionUID = 1L;
@@ -31,6 +32,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	private double[] vectorStart, vectorEnd;
 	private double[][] TrM, viewMatrix, CT, TT;
 	private double[][] vectorVertex, matrixTr1 , matrixRo, matrixTr2, matrixTr3, matrixSc1, matrixSc2;
+	
 	public MyCanvas() {
 		File settings = new File(filenameSettings);
 		Scanner setScan;
@@ -59,6 +61,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
 		//for viewer matrix
 		matrixTr1 = Matrixs.CreateTranslateMatrix2D(-coordinateXCenterWindows, -coordinateYCenterWindows);
 		matrixRo = Matrixs.CreateRotateMatrix2D(-1 * Math.toRadians(direction));
@@ -66,6 +69,13 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		matrixTr2 = Matrixs.CreateTranslateMatrix2D(20, 20);
 	    matrixSc2 = Matrixs.CreateScaleMatrix2D(1, -1);
 		matrixTr3 = Matrixs.CreateTranslateMatrix2D(0, vh + 40);
+		
+		viewMatrix = Mathematics.multiplicateMatrix(matrixTr3, matrixSc2);	
+		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, matrixTr2);
+		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, matrixSc1);
+		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, matrixRo);
+		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, matrixTr1);
+		
 		TT = Matrixs.CreateMatrix2D();
 		CT = Matrixs.CreateMatrix2D();
 		vectorVertex = new double [3][1];
@@ -77,30 +87,21 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		addMouseListener(this);
 		addMouseMotionListener(this);
 	}
+	
+	
 	public void paint(Graphics g) {
-	//	matrixSc1 = Mathematics.multiplicateMatrix(
-	//			Mathematics.multiplicateMatrix(Matrixs.CreateTranslateMatrix2D(-20, -20),
-	//					matrixSc1), Matrixs.CreateTranslateMatrix2D(20, 20));
-	//	matrixSc2 = Mathematics.multiplicateMatrix(
-	//			Mathematics.multiplicateMatrix(Matrixs.CreateTranslateMatrix2D(-20, -20),
-	//					matrixSc2), Matrixs.CreateTranslateMatrix2D(20, 20));
-	//	matrixRo = Mathematics.multiplicateMatrix(
-	//			Mathematics.multiplicateMatrix(Matrixs.CreateTranslateMatrix2D(-20, -20),
-	//					Matrixs.CreateRotateBackMatrix2D(direction)), Matrixs.CreateTranslateMatrix2D(20, 20));
-		viewMatrix = Mathematics.multiplicateMatrix(matrixTr3, matrixSc2);	
-		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, matrixTr2);
-		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, matrixSc1);
-		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, matrixRo);
-		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, matrixTr1);
+		
 		TrM = Mathematics.multiplicateMatrix(CT, TT);
 		TrM = Mathematics.multiplicateMatrix(TrM, viewMatrix);
-		//read from file
+		
+		//read the verties for the file and create the new verties for the paint
 		File fileName1 = new File(filename);
 		try {
 			Scanner scan = new Scanner(fileName1);
 			int sizeVertex = scan.nextInt();
 			System.out.println(sizeVertex);
 			Vertex vertexs[] = new Vertex[sizeVertex];
+			
 			for (int i = 0; i < sizeVertex; i++) { 
 				vertexX = scan.nextDouble();
 				System.out.println(vertexX);
@@ -112,11 +113,14 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 			    vertexY = vectorVertex[1][0] + 20;
 				vertexs[i] = new Vertex(vertexX,vertexY);
 			}
+			
+			//read the edges and draw
 			int sizeEdge = scan.nextInt();
 			System.out.println(sizeEdge);
 			g.drawRect(20, 20, (int)vw, (int)vh);
 			Polygon p = new Polygon();
 			Edge edges[] = new Edge[sizeEdge];
+			
 			for (int i = 0; i < sizeEdge; i++) {
 				edges[i] = new Edge(vertexs[scan.nextInt()],vertexs[scan.nextInt()]);
 				p.addPoint((int) edges[i].getV1().getX(), (int) edges[i].getV1().getY());

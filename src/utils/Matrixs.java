@@ -50,16 +50,9 @@ public class Matrixs {
 	        return CreateTranslateMatrix2D(-translateX, -translateY);
 	 }
 	 public static double[][] CreateMatrix2D() {
-	        double initMatrix[][] = new double[3][3];
-	        initMatrix[0][0] = 1;
-	        initMatrix[0][1] = 0;
-	        initMatrix[0][2] = 0;
-	        initMatrix[1][0] = 0;
-	        initMatrix[1][1] = 1;
-	        initMatrix[1][2] = 0;
-	        initMatrix[2][0] = 0;
-	        initMatrix[2][1] = 0;
-	        initMatrix[2][2] = 1;
+		 double initMatrix[][] = new double[3][3];
+	        for(int i = 0; i < 3; i++)
+	        	initMatrix[i][i] = 1;
 	        return initMatrix;
 	 }
 	 public static double[][] CreateVertexVector2D(double x, double y) {
