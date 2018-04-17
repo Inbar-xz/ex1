@@ -19,50 +19,59 @@ import shape.Edge;
 public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListener{
 
 	private static final long serialVersionUID = 1L;
-	public static final String filename = "example.scn.txt"; //name of file to read data from.
-	public static final String filenameSettings = "example.viw.txt"; //name of file to read data from.
+	
+	public static final String scnFile = "example.scn.txt";
+	public static final String viwFile = "example.viw.txt";
+	
 	private String locationTranspormation;
 	private Point pStart, pEnd;
 	private double centerX , centerY, radiusPStart, radiusPEnd, scaleParameter;
-	private double vertexX,vertexY;
-	private double coordinateXCenterWindows, coordinateYCenterWindows;
-	private double direction;
 	private double sepertation = 83 + 1/3;
 	private double ww , wh , vw , vh;
 	private double[] vectorStart, vectorEnd;
-	private double[][] TrM, viewMatrix, CT, TT;
-	private double[][] vectorVertex, matrixTr1 , matrixRo, matrixTr2, matrixTr3, Transformationc1, Transformationc2;
+	private double[][] vectorVertex, TrM, viewMatrix, currentTrans, totalTrans;
+	private Vertex verticesList[], verticesDraw[];
+	private Edge edgesList[];
 	
 	public MyCanvas() {
-		File settings = new File(filenameSettings);
+		
+		double coordinateXCenterWindows = 0, coordinateYCenterWindows = 0;
+		double direction = 0;
+		double[][] matrixTr1 , matrixRo, matrixTr2, matrixTr3, Transformationc1, Transformationc2;
+		
+		//read the view file to create the view matrix
+		File viewFile = new File(viwFile);
 		Scanner setScan;
 		try {
-			setScan = new Scanner(settings);
+			setScan = new Scanner(viewFile);
 			setScan.next();
 			coordinateXCenterWindows = setScan.nextDouble();
-			System.out.println(coordinateXCenterWindows);
 			coordinateYCenterWindows = setScan.nextDouble();
-			System.out.println(coordinateYCenterWindows);
 			setScan.next();
 			direction = setScan.nextDouble();
-			System.out.println(direction);
 			setScan.next();
 			ww = setScan.nextDouble();
-			System.out.println(ww);
 			wh = setScan.nextDouble();
-			System.out.println(wh);
 			setScan.next();
 			vw = setScan.nextDouble();
-			System.out.println(vw);
 			vh = setScan.nextDouble();
-			System.out.println(vh);
 			setScan.close();
+			
+			//check
+			System.out.println(coordinateXCenterWindows);
+			System.out.println(coordinateYCenterWindows);
+			System.out.println(direction);
+			System.out.println(ww);
+			System.out.println(wh);
+			System.out.println(vw);
+			System.out.println(vh);
+			
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
-		//for viewer matrix
+		//create the view matrix
 		matrixTr1 = Transformation.CreateTranslateMatrix2D(-coordinateXCenterWindows, -coordinateYCenterWindows);
 		matrixRo = Transformation.CreateRotateMatrix2D(-1 * Math.toRadians(direction));
 		Transformationc1 = Transformation.CreateScaleMatrix2D(vw / ww, vh / wh);
@@ -76,26 +85,86 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, matrixRo);
 		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, matrixTr1);
 		
-		TT = Transformation.CreateIdentityMatrix(3);
-		CT = Transformation.CreateIdentityMatrix(3);
-		vectorVertex = new double [3][1];
-		setSize((int)vw + 40, (int)vh + 40);
+		//initialize the current matrix and the total matrix
+		totalTrans = Transformation.CreateIdentityMatrix(3);
+		currentTrans = Transformation.CreateIdentityMatrix(3);
+		
+		//set the center vertex
 		centerX = (vw / 2) + 20;
 		centerY = (vh / 2) + 20;
+				
+		setSize((int)vw + 40, (int)vh + 40);
+		
+		vectorVertex = new double [3][1];
 		vectorStart = new double[2];
 		vectorEnd = new double[2];
+		
+		//read the vertices and the edges for the file
+		File screenFile = new File(scnFile);
+		try {
+			Scanner scan = new Scanner(screenFile);
+			
+			//read vertices and save 2 copies
+			int verticesNum = scan.nextInt();
+			verticesList = new Vertex[verticesNum];
+			verticesDraw = new Vertex[verticesNum];
+			double vertexX, vertexY;
+			for (int i = 0; i < verticesNum; i++) { 
+				vertexX = scan.nextDouble();
+				vertexY = scan.nextDouble();
+				verticesList[i] = new Vertex(vertexX, vertexY);
+				verticesDraw[i] = new Vertex(vertexX, vertexY);
+			}
+			
+			//read the edges and create edges with the vertices for the verticesDraw 
+			int edgeNum = scan.nextInt();
+			edgesList = new Edge[edgeNum];
+			for (int i = 0; i < edgeNum; i++) {
+				edgesList[i] = new Edge(verticesDraw[scan.nextInt()], verticesDraw[scan.nextInt()]);
+			}
+			scan.close();
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
 		addMouseListener(this);
 		addMouseMotionListener(this);
 	}
 	
-	
 	public void paint(Graphics g) {
 		
-		TrM = Mathematics.multiplicateMatrix(CT, TT);
+		double vertexX, vertexY;
+		
+		TrM = Mathematics.multiplicateMatrix(currentTrans, totalTrans);
 		TrM = Mathematics.multiplicateMatrix(TrM, viewMatrix);
 		
-		//read the verties for the file and create the new verties for the paint
-		File fileName1 = new File(filename);
+		//apply changes on the vertices in verticesDraw, using the origin vertices in verticesList
+		int verticesNum = verticesList.length;
+		for (int i = 0; i < verticesNum; i++) {
+			vectorVertex = Transformation.vertexToVector2D(verticesList[i]);
+		    vectorVertex = Mathematics.multiplicateMatrix(TrM, vectorVertex);
+		    vertexX = vectorVertex[0][0] + 20;
+		    vertexY = vectorVertex[1][0] + 20;
+		    verticesDraw[i].setX(vertexX);
+		    verticesDraw[i].setY(vertexY);
+		}
+		
+		//draw the new vertices and edges
+		g.drawRect(20, 20, (int)vw, (int)vh);
+		Polygon p = new Polygon();
+		int edgesNum = edgesList.length;
+		for (int i = 0; i < edgesNum; i++) {
+			p.addPoint((int) edgesList[i].getV1().getX(), (int) edgesList[i].getV1().getY());
+			p.addPoint((int) edgesList[i].getV2().getX(), (int) edgesList[i].getV2().getY());	
+			g.setColor(Color.BLUE);
+			g.drawPolygon(p);
+			p.reset();
+		}
+		
+		/*
+		//read the vertices for the file and create the new vertices for the paint
+		File fileName1 = new File(scnFile);
 		try {
 			Scanner scan = new Scanner(fileName1);
 			int sizeVertex = scan.nextInt();
@@ -107,7 +176,8 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 				System.out.println(vertexX);
 				vertexY = scan.nextDouble();
 				System.out.println(vertexY);
-			    vectorVertex = Transformation.vertexToVector2D(new Vertex(vertexX, vertexY));
+			    
+				vectorVertex = Transformation.vertexToVector2D(new Vertex(vertexX, vertexY));
 			    vectorVertex = Mathematics.multiplicateMatrix(TrM, vectorVertex);
 			    vertexX = vectorVertex[0][0] + 20;
 			    vertexY = vectorVertex[1][0] + 20;
@@ -134,7 +204,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		} catch (FileNotFoundException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
-		}
+		}*/
 	}
 	public String getTypeTranspormaton(Point point) {
 		//the limits of screen is 20 - 270
@@ -181,10 +251,10 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		 radiusPStart = Mathematics.distance(pStart, centerX, centerY);
 		 radiusPEnd = Mathematics.distance(pEnd, centerX, centerY);
 		 scaleParameter = radiusPEnd / radiusPStart;
-		 CT = Transformation.CreateScaleMatrix2D(scaleParameter, scaleParameter);
-		 CT = Mathematics.multiplicateMatrix
+		 currentTrans = Transformation.CreateScaleMatrix2D(scaleParameter, scaleParameter);
+		 currentTrans = Mathematics.multiplicateMatrix
 				 (Mathematics.multiplicateMatrix
-						 (Transformation.CreateTranslateMatrix2D(centerX, centerY), CT)
+						 (Transformation.CreateTranslateMatrix2D(centerX, centerY), currentTrans)
 						 , Transformation.CreateTranslateMatrix2D(-centerX, -centerY));
 	}
 	public void executeRotate() {
@@ -195,15 +265,15 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		 double angleStart = getAngleFromVectorToXAxis(vectorStart);
 		 double angleEnd = getAngleFromVectorToXAxis(vectorEnd);
 		 double angleFinish = angleStart - angleEnd;
-		 CT = Transformation.CreateRotateMatrix2D(Math.toRadians(angleFinish));
-		 CT = Mathematics.multiplicateMatrix
+		 currentTrans = Transformation.CreateRotateMatrix2D(Math.toRadians(angleFinish));
+		 currentTrans = Mathematics.multiplicateMatrix
 				 (Mathematics.multiplicateMatrix
-						 (Transformation.CreateTranslateMatrix2D(centerX, centerY), CT)
+						 (Transformation.CreateTranslateMatrix2D(centerX, centerY), currentTrans)
 						 , Transformation.CreateTranslateMatrix2D(-centerX, -centerY));
 	}
 	public void executeAction(String type) {
 		switch(type) {
-		 case "T":  CT = Transformation.CreateTranslateMatrix2D(pEnd.getX() - pStart.getX(),
+		 case "T":  currentTrans = Transformation.CreateTranslateMatrix2D(pEnd.getX() - pStart.getX(),
 					pEnd.getY() - pStart.getY());
          break;
 		 case "SD": executeScale();
@@ -257,8 +327,8 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		System.out.println(pEnd.getX());
 		System.out.println(pEnd.getY());
 		executeAction(locationTranspormation);
-		TT = Mathematics.multiplicateMatrix(CT, TT);
-		CT = Transformation.CreateIdentityMatrix(3);
+		totalTrans = Mathematics.multiplicateMatrix(currentTrans, totalTrans);
+		currentTrans = Transformation.CreateIdentityMatrix(3);
 		this.repaint();
 	}
 	@Override

@@ -1,8 +1,10 @@
 package shape;
 
 public class Vertex {
+	
     private double x;
     private double y;
+    
     /**
      * constructor.
      *
@@ -13,6 +15,12 @@ public class Vertex {
         this.x = x;
         this.y = y;
     }
+    
+    /**
+     * check if 2 vertices are equal
+     * @param other
+     * @return
+     */
     public boolean equals(Vertex other) {
         if (other.getClass() == getClass()) {
             Vertex v = (Vertex) other;
@@ -20,32 +28,35 @@ public class Vertex {
         }
         return false;
     }
+    
     /**
-     * return the exist x.
+     * return the value of x.
      * @return x
      */
     public double getX() {
         return this.x;
     }
-    /**
-     * change the value of x.
-     * @param newX of the point.
-     */
-    public void setX(double newX) {
-        this.x = newX;
-    }
-    /**
-     * change the value of y.
-     * @param newY of the point.
-     */
-    public void setY(double newY) {
-        this.y = newY;
-    }
+    
     /**
      * return the value of y.
      * @return y
      */
     public double getY() {
         return this.y;
+    }
+    
+    /**
+     * set new value to x.
+     * @param newX of the point.
+     */
+    public void setX(double newX) {
+        this.x = newX;
+    }
+    /**
+     * set new value to y.
+     * @param newY of the point.
+     */
+    public void setY(double newY) {
+        this.y = newY;
     }
 }

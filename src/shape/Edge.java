@@ -1,8 +1,10 @@
 package shape;
 
 public class Edge {
+	
     private Vertex v1;
     private Vertex v2;
+    
     /**
      * constructor.
      *
@@ -13,6 +15,12 @@ public class Edge {
         this.v1 = v1;
         this.v2 = v2;
     }
+    
+    /**
+     * check if 2 edged are equal
+     * @param other
+     * @return
+     */
     public boolean equals(Edge other) {
         if (other.getClass() == getClass()) {
             Edge e = (Edge) other;
@@ -20,27 +28,15 @@ public class Edge {
         }
         return false;
     }
+    
     /**
-     * return the exist v1.
+     * return the value of first vertex.
      * @return v1
      */
     public Vertex getV1() {
         return this.v1;
     }
-    /**
-     * change the value of v1.
-     * @param newV1 of the vertex.
-     */
-    public void setV1(Vertex newV1) {
-        this.v1 = newV1;
-    }
-    /**
-     * change the value of v2.
-     * @param newV2 of the vertex.
-     */
-    public void setV2(Vertex newV2) {
-        this.v2 = newV2;
-    }
+    
     /**
      * return the value of second vertex.
      * @return v2
@@ -48,7 +44,20 @@ public class Edge {
     public Vertex getV2() {
         return this.v2;
     }
-   // public Polygon createEdge() {
-   // 	
-   // }
+    
+    /**
+     * set new value to the first vertex.
+     * @param newV1 of the vertex.
+     */
+    public void setV1(Vertex newV1) {
+        this.v1 = newV1;
+    }
+    
+    /**
+     * set new value to the second vertex.
+     * @param newV2 of the vertex.
+     */
+    public void setV2(Vertex newV2) {
+        this.v2 = newV2;
+    }
 }
