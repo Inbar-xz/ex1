@@ -1,3 +1,5 @@
+//Name:Yakir Pinchas & Inbar Demuth.
+//id: yakir - 203200530 inbar - 204885370.
 package maindraw;
 
 import java.awt.Canvas;
@@ -165,60 +167,19 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 			g.drawPolygon(p);
 			p.reset();
 		}
-		
-		/*
-		//read the vertices for the file and create the new vertices for the paint
-		File fileName1 = new File(scnFile);
-		try {
-			Scanner scan = new Scanner(fileName1);
-			int sizeVertex = scan.nextInt();
-			System.out.println(sizeVertex);
-			Vertex vertexs[] = new Vertex[sizeVertex];
-			
-			for (int i = 0; i < sizeVertex; i++) { 
-				vertexX = scan.nextDouble();
-				System.out.println(vertexX);
-				vertexY = scan.nextDouble();
-				System.out.println(vertexY);
-			    
-				vectorVertex = Transformation.vertexToVector2D(new Vertex(vertexX, vertexY));
-			    vectorVertex = Mathematics.multiplicateMatrix(transMatrix, vectorVertex);
-			    vertexX = vectorVertex[0][0] + 20;
-			    vertexY = vectorVertex[1][0] + 20;
-				vertexs[i] = new Vertex(vertexX,vertexY);
-			}
-			
-			//read the edges and draw
-			int sizeEdge = scan.nextInt();
-			System.out.println(sizeEdge);
-			g.drawRect(20, 20, (int)viewWidth, (int)viewHigh);
-			Polygon p = new Polygon();
-			Edge edges[] = new Edge[sizeEdge];
-			
-			for (int i = 0; i < sizeEdge; i++) {
-				edges[i] = new Edge(vertexs[scan.nextInt()],vertexs[scan.nextInt()]);
-				p.addPoint((int) edges[i].getV1().getX(), (int) edges[i].getV1().getY());
-				p.addPoint((int) edges[i].getV2().getX(), (int) edges[i].getV2().getY());	
-				g.setColor(Color.BLUE);
-				g.drawPolygon(p);
-				p.reset();
-			}
-			scan.close();
-			
-		} catch (FileNotFoundException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}*/
 	}
-	
 	/**
 	 * get point and return the type of transformation that will
 	 * be create.
+	 * the matrix seperate in this direction:
+	 * ROTATE(RLU) SCALE(SU) ROTATE(RRU)
+	 * SCALE(SL) TRANSLATE(T) SCALE (SR)
+	 * ROTATE(RLD) SCALE(SD) ROTATE(RRD)
 	 * @param point
 	 * @return
 	 */
 	public String getTransType(Point point) {
-		
+
 		//the limits of screen is [margins - (margins+viewWidth)] in this case [20 - 270]
 		double sepertation = viewWidth / 3;
 		String type = "";
@@ -270,11 +231,21 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		return angle;
 	}
 	
+	/**
+	 * execute scale transformation.
+	 */
 	public void executeScale() {
 		double radiusPStart, radiusPEnd, scaleParameter;
+		
+		//calculate the radius of start point and end point according to function
+		//that calculate the distance bettwen two points
 		radiusPStart = Mathematics.distance(pStart, centerX, centerY);
 		radiusPEnd = Mathematics.distance(pEnd, centerX, centerY);
+		
+		//the parameter that send to scale matrix is radius end / radius start
 		scaleParameter = radiusPEnd / radiusPStart;
+		
+		//Current Transformation is translate(cx,cy) * scale(s,s) * translate(-cx,-cy) 
 		currentTrans = Transformation.CreateScaleMatrix2D(scaleParameter, scaleParameter);
 		currentTrans = Mathematics.multiplicateMatrix
 			 (Mathematics.multiplicateMatrix
@@ -282,16 +253,28 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 					 , Transformation.CreateTranslateMatrix2D(-centerX, -centerY));
 	}
 	
+	/**
+	 * execute rotation transformation.
+	 */
 	public void executeRotate() {
-		 vectorStart[0] = pStart.getX() - centerX;
-		 vectorStart[1] = pStart.getY() - centerY;
-		 vectorEnd[0] = pEnd.getX() - centerX;
-		 vectorEnd[1] = pEnd.getY() - centerY;
-		 double angleStart = getAngleFromVectorToXAxis(vectorStart);
-		 double angleEnd = getAngleFromVectorToXAxis(vectorEnd);
-		 double angleFinish = angleStart - angleEnd;
-		 currentTrans = Transformation.CreateRotateMatrix2D(Math.toRadians(angleFinish));
-		 currentTrans = Mathematics.multiplicateMatrix
+		
+		//vector start = (x of start point - x of center point,y of start point - y of center point) 
+		vectorStart[0] = pStart.getX() - centerX;
+		vectorStart[1] = pStart.getY() - centerY;
+		
+		//vector start = (x of end point - x of center point,y of end point - y of center point)
+		vectorEnd[0] = pEnd.getX() - centerX;
+		vectorEnd[1] = pEnd.getY() - centerY;
+		
+		//calculate the angleStart and angleEnd according to function that
+		//calculate the angle between vector to XAxis.
+		double angleStart = getAngleFromVectorToXAxis(vectorStart);
+		double angleEnd = getAngleFromVectorToXAxis(vectorEnd);
+		double angleFinish = angleStart - angleEnd;
+		
+		//Current Transformation is translate(cx,cy) * rotate(angle) * translate(-cx,-cy) 
+		currentTrans = Transformation.CreateRotateMatrix2D(Math.toRadians(angleFinish));
+		currentTrans = Mathematics.multiplicateMatrix
 				 (Mathematics.multiplicateMatrix
 						 (Transformation.CreateTranslateMatrix2D(centerX, centerY), currentTrans)
 						 , Transformation.CreateTranslateMatrix2D(-centerX, -centerY));
@@ -299,6 +282,10 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	
 	/**
 	 * execute transformation by type
+	 * the matrix seperate in this direction:
+	 * ROTATE(RLU) SCALE(SU) ROTATE(RRU)
+	 * SCALE(SL) TRANSLATE(T) SCALE (SR)
+	 * ROTATE(RLD) SCALE(SD) ROTATE(RRD)
 	 * @param type
 	 */
 	public void executeAction(String type) {
@@ -328,6 +315,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		pStart = arg0.getPoint();
 		transType = getTransType(pStart);
 	}
+	
 	@Override
 	public void mouseReleased(MouseEvent arg0) {
 
@@ -340,13 +328,11 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		currentTrans = Transformation.CreateIdentityMatrix(3);
 		this.repaint();
 	}
+	
 	@Override
 	public void mouseDragged(MouseEvent arg0) {
 		// TODO Auto-generated method stub
-		pEnd = arg0.getPoint();
-		System.out.println(pEnd.getX());
-		System.out.println(pEnd.getY());
-		
+		pEnd = arg0.getPoint();		
 		//if in range
 		if((pStart.getX() >= margins) && (pStart.getX() <= viewWidth + margins)
 				&& (pStart.getY() >= margins) && (pStart.getY() <= viewWidth + margins))

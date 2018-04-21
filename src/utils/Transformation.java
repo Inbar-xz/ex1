@@ -1,3 +1,5 @@
+//Name:Yakir Pinchas & Inbar Demuth.
+//id: yakir - 203200530 inbar - 204885370.s
 package utils;
 
 import shape.Vertex;
@@ -17,7 +19,6 @@ public class Transformation {
 	        scaleMatrix[2][2] = 1;
 	        return scaleMatrix;
 	 }
-	 
 	 /**
 	  * create inverse scale matrix for 2D
 	  * @param scaleX

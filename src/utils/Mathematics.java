@@ -1,3 +1,5 @@
+//Name:Yakir Pinchas & Inbar Demuth.
+//id: yakir - 203200530 inbar - 204885370.
 package utils;
 
 import java.awt.Point;
@@ -29,7 +31,9 @@ public class Mathematics {
     }
     /**
      * calculate the distance between two points.
-     * @param other is second point.
+     * @param p1 is first point.
+     * @param x is x of second point.
+     * @param y is y of second point.
      * @return distance
      */
     public static double distance(Point p1, double x, double y) {
@@ -61,7 +65,11 @@ public class Mathematics {
         }
         return iArr;
     }
-    // return B = A^T
+    /**
+     * calculate the transpose matrix.
+     * @param matrix is original matrix.
+     * @return the transpose matrix(B = A^T)
+     */
     public static double[][] transpose(double[][] matrix) {
         int rows = matrix.length;
         int cols = matrix[0].length;
@@ -71,8 +79,12 @@ public class Mathematics {
                 transposeMatrix[j][i] = matrix[i][j];
         return transposeMatrix;
     }
-
-    // return c = a + b
+    /**
+     * calculate the add of two matrix in same size
+     * @param matrixA is first matrix.
+     * @param matrixB is second matrix.
+     * @return addition matrix(C = A + B)
+     */
     public static double[][] add(double[][] matrixA, double[][] matrixB) {
         int rows = matrixA.length;
         int cols = matrixA[0].length;
@@ -82,8 +94,12 @@ public class Mathematics {
                 answer[i][j] = matrixA[i][j] + matrixB[i][j];
         return answer;
     }
-
-    // return c = a - b
+    /**
+     * calculate the sub of two matrix in same size
+     * @param matrixA is first matrix.
+     * @param matrixB is second matrix.
+     * @return sub matrix(C = A - B)
+     */
     public static double[][] subtract(double[][] matrixA, double[][] matrixB) {
         int rows = matrixA.length;
         int cols = matrixA[0].length;
@@ -93,8 +109,12 @@ public class Mathematics {
                 answer[i][j] = matrixA[i][j] - matrixB[i][j];
         return answer;
     }
-    
-    // return c = a * b
+    /**
+     * calculate the multipication of two matrix in same size
+     * @param matrixA is first matrix.
+     * @param matrixB is second matrix.
+     * @return multipication matrix(C = A * B)
+     */
     public static double[][] multiplicateMatrix(double[][] matrixA, double[][] matrixB) {
 
         int aRows = matrixA.length;
@@ -123,8 +143,12 @@ public class Mathematics {
 
         return C;
     }
-    
-    // matrix-vector multiplication (y = A * x)
+    /**
+     * calculate the multiplication of matrix-vector
+     * @param a is matrix.
+     * @param x is vector.
+     * @return multiplication (y = A * x)
+     */
     public static double[] multiplyMatrixInVector(double[][] a, double[] x) {
         int m = a.length;
         int n = a[0].length;
@@ -135,9 +159,12 @@ public class Mathematics {
                 y[i] += a[i][j] * x[j];
         return y;
     }
-
-
-    // vector-matrix multiplication (y = x^T A)
+    /**
+     * calculate the multiplication of vector-matrix
+     * @param x is vector.
+     * @param a is matrix.
+     * @return multiplication (y =  x^T * A)
+     */
     public static double[] multiplyVectorInMatrix(double[] x, double[][] a) {
         int m = a.length;
         int n = a[0].length;

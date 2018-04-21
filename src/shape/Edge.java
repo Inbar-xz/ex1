@@ -1,3 +1,5 @@
+//Name:Yakir Pinchas & Inbar Demuth.
+//id: yakir - 203200530 inbar - 204885370.
 package shape;
 
 public class Edge {
