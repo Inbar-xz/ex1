@@ -7,6 +7,8 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Polygon;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -18,7 +20,7 @@ import utils.Mathematics;
 import shape.Vertex;
 import shape.Edge;
 
-public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListener{
+public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListener, KeyListener{
 
 	private static final long serialVersionUID = 1L;
 	
@@ -127,6 +129,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		
 		addMouseListener(this);
 		addMouseMotionListener(this);
+		addKeyListener(this);
 	}
 	
 	/**
@@ -340,6 +343,35 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		this.repaint();
 	}
 	
+	public void keyPressed(KeyEvent e) {
+
+	    int key = e.getKeyCode();
+
+	    if (key == KeyEvent.VK_R) {
+	    	
+	    	//set the value of the point to the origin one
+	    	for(int i = 0; i < verticesList.length; i++) {
+	    		verticesDraw[i].setX(verticesList[i].getX());
+	    		verticesDraw[i].setY(verticesList[i].getY());
+	    	}
+	    	
+	    	//reset the current matrix and the total matrix
+			totalTrans = Transformation.CreateIdentityMatrix(3);
+			currentTrans = Transformation.CreateIdentityMatrix(3);
+	    	
+			//draw
+	    	this.repaint();
+	    }
+
+	    if (key == KeyEvent.VK_L) {
+	        
+	    }
+
+	    if (key == KeyEvent.VK_Q) {
+	    	System.exit(0);
+	    }
+	}
+	
 	@Override
 	public void mouseClicked(MouseEvent arg0) {
 		// TODO Auto-generated method stub
@@ -357,6 +389,18 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	}
 	@Override
 	public void mouseMoved(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void keyTyped(KeyEvent e) {
 		// TODO Auto-generated method stub
 		
 	}

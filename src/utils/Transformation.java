@@ -19,6 +19,7 @@ public class Transformation {
 	        scaleMatrix[2][2] = 1;
 	        return scaleMatrix;
 	 }
+	 
 	 /**
 	  * create inverse scale matrix for 2D
 	  * @param scaleX

@@ -8,6 +8,7 @@ import java.awt.Point;
  * Math functions class.
  */
 public class Mathematics {
+	
     /**
      * Calculates average of two numbers.
      *
@@ -18,6 +19,7 @@ public class Mathematics {
     public static double average(double num1, double num2) {
         return (num1 + num2) / 2;
     }
+    
     /**
      * Determines if var is between the numbers.
      *
@@ -29,6 +31,7 @@ public class Mathematics {
     public static boolean isBetween(double num1, double var, double num2) {
         return (num1 <= var && var <= num2) || (num2 <= var && var <= num1);
     }
+    
     /**
      * calculate the distance between two points.
      * @param p1 is first point.
@@ -40,6 +43,7 @@ public class Mathematics {
         return Math.sqrt(Math.pow(p1.getX() - x, 2)
                     + Math.pow(p1.getY() - y, 2));
     }
+    
     /**
      * Return a^2 + b^2.
      *
@@ -65,6 +69,7 @@ public class Mathematics {
         }
         return iArr;
     }
+    
     /**
      * calculate the transpose matrix.
      * @param matrix is original matrix.
@@ -79,6 +84,7 @@ public class Mathematics {
                 transposeMatrix[j][i] = matrix[i][j];
         return transposeMatrix;
     }
+    
     /**
      * calculate the add of two matrix in same size
      * @param matrixA is first matrix.
@@ -94,6 +100,7 @@ public class Mathematics {
                 answer[i][j] = matrixA[i][j] + matrixB[i][j];
         return answer;
     }
+    
     /**
      * calculate the sub of two matrix in same size
      * @param matrixA is first matrix.
@@ -109,6 +116,7 @@ public class Mathematics {
                 answer[i][j] = matrixA[i][j] - matrixB[i][j];
         return answer;
     }
+    
     /**
      * calculate the multipication of two matrix in same size
      * @param matrixA is first matrix.
@@ -143,6 +151,7 @@ public class Mathematics {
 
         return C;
     }
+    
     /**
      * calculate the multiplication of matrix-vector
      * @param a is matrix.
@@ -159,6 +168,7 @@ public class Mathematics {
                 y[i] += a[i][j] * x[j];
         return y;
     }
+    
     /**
      * calculate the multiplication of vector-matrix
      * @param x is vector.
