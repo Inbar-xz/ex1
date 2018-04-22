@@ -4,6 +4,8 @@ package maindraw;
 
 import java.awt.Canvas;
 import java.awt.Color;
+import java.awt.FileDialog;
+import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Polygon;
@@ -24,8 +26,8 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 
 	private static final long serialVersionUID = 1L;
 	
-	public static final String scnFile = "example.scn.txt";
-	public static final String viwFile = "example.viw.txt";
+	public static String scnFile = "ex2.scn.txt";
+	public static String viwFile = "ex2.viw.txt";
 	
 	private String transType;
 	private Point pStart, pEnd;
@@ -43,12 +45,63 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	 */
 	public MyCanvas() {
 		
+		//read the view file to create the view matrix
+		openViewFile();
+		
+		//initialize the current matrix and the total matrix
+		totalTrans = Transformation.CreateIdentityMatrix(3);
+		currentTrans = Transformation.CreateIdentityMatrix(3);
+		
+		//set the first click point and the end click point
+		vectorStart = new double[2];
+		vectorEnd = new double[2];
+		
+		//read the vertices and the edges for the file
+		openScreenFile();
+		
+		addKeyListener(this);
+		addMouseListener(this);
+		addMouseMotionListener(this);
+	}
+	
+	public void openScreenFile() {
+		File screenFile = new File(scnFile);
+		try {
+			Scanner scan = new Scanner(screenFile);
+			
+			//read vertices and save 2 copies
+			int verticesNum = scan.nextInt();
+			verticesList = new Vertex[verticesNum];
+			verticesDraw = new Vertex[verticesNum];
+			double vertexX, vertexY;
+			for (int i = 0; i < verticesNum; i++) { 
+				vertexX = scan.nextDouble();
+				vertexY = scan.nextDouble();
+				verticesList[i] = new Vertex(vertexX, vertexY);
+				verticesDraw[i] = new Vertex(vertexX, vertexY);
+			}
+			
+			//read the edges and create edges with the vertices for the verticesDraw 
+			int edgeNum = scan.nextInt();
+			edgesList = new Edge[edgeNum];
+			for (int i = 0; i < edgeNum; i++) {
+				edgesList[i] = new Edge(verticesDraw[scan.nextInt()], verticesDraw[scan.nextInt()]);
+			}
+			scan.close();
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+	}
+	
+	public void openViewFile() {
+		
 		double coordinateXCenterWindows = 0, coordinateYCenterWindows = 0;
 		double direction = 0;
 		double[][] matrixTr1 , matrixRo, matrixTr2, matrixTr3, Transformationc1, Transformationc2;
 		double windowWidth = 0, windowHigh = 0;
 		
-		//read the view file to create the view matrix
+		
 		File viewFile = new File(viwFile);
 		Scanner setScan;
 		try {
@@ -84,52 +137,12 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, matrixRo);
 		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, matrixTr1);
 		
-		//initialize the current matrix and the total matrix
-		totalTrans = Transformation.CreateIdentityMatrix(3);
-		currentTrans = Transformation.CreateIdentityMatrix(3);
 		
 		//set the center vertex
 		centerX = (viewWidth / 2) + margins;
 		centerY = (viewHigh / 2) + margins;
-		
-		//set the first click point and the end click point
-		vectorStart = new double[2];
-		vectorEnd = new double[2];
-		
-		setSize((int)viewWidth + 40, (int)viewHigh + 40);
-		
-		//read the vertices and the edges for the file
-		File screenFile = new File(scnFile);
-		try {
-			Scanner scan = new Scanner(screenFile);
-			
-			//read vertices and save 2 copies
-			int verticesNum = scan.nextInt();
-			verticesList = new Vertex[verticesNum];
-			verticesDraw = new Vertex[verticesNum];
-			double vertexX, vertexY;
-			for (int i = 0; i < verticesNum; i++) { 
-				vertexX = scan.nextDouble();
-				vertexY = scan.nextDouble();
-				verticesList[i] = new Vertex(vertexX, vertexY);
-				verticesDraw[i] = new Vertex(vertexX, vertexY);
-			}
-			
-			//read the edges and create edges with the vertices for the verticesDraw 
-			int edgeNum = scan.nextInt();
-			edgesList = new Edge[edgeNum];
-			for (int i = 0; i < edgeNum; i++) {
-				edgesList[i] = new Edge(verticesDraw[scan.nextInt()], verticesDraw[scan.nextInt()]);
-			}
-			scan.close();
-		} catch (FileNotFoundException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		
-		addMouseListener(this);
-		addMouseMotionListener(this);
-		addKeyListener(this);
+
+		setSize((int)viewWidth + 40, (int)viewHigh + 40);				
 	}
 	
 	/**
@@ -171,6 +184,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 			p.reset();
 		}
 	}
+	
 	/**
 	 * get point and return the type of transformation that will
 	 * be create.
@@ -241,7 +255,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		double radiusPStart, radiusPEnd, scaleParameter;
 		
 		//calculate the radius of start point and end point according to function
-		//that calculate the distance bettwen two points
+		//that calculate the distance between two points
 		radiusPStart = Mathematics.distance(pStart, centerX, centerY);
 		radiusPEnd = Mathematics.distance(pEnd, centerX, centerY);
 		
@@ -364,7 +378,22 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	    }
 
 	    if (key == KeyEvent.VK_L) {
+	    	
+	    	//get new file from user
+	    	FileDialog dialog = new FileDialog((Frame)null, "Select File to Open");
+	        dialog.setMode(FileDialog.LOAD);
+	        dialog.setVisible(true);
+	        String newFile = dialog.getFile();
+	        System.out.println(newFile);
 	        
+	        //use the file according to his type
+	        if(newFile.toLowerCase().endsWith("scn.txt")) {
+	        	scnFile = newFile;
+	        	openScreenFile();
+	        } else if(newFile.toLowerCase().endsWith("viw.txt")) {
+	        	viwFile = newFile;
+	        	openViewFile();
+	        }
 	    }
 
 	    if (key == KeyEvent.VK_Q) {
