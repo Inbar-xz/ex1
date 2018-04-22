@@ -383,16 +383,27 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	    	FileDialog dialog = new FileDialog((Frame)null, "Select File to Open");
 	        dialog.setMode(FileDialog.LOAD);
 	        dialog.setVisible(true);
-	        String newFile = dialog.getFile();
-	        System.out.println(newFile);
+	        String newFile = dialog.getDirectory() + dialog.getFile();
 	        
 	        //use the file according to his type
 	        if(newFile.toLowerCase().endsWith("scn.txt")) {
 	        	scnFile = newFile;
 	        	openScreenFile();
+	        	
+	        	//initialize the current matrix and the total matrix
+	    		totalTrans = Transformation.CreateIdentityMatrix(3);
+	    		currentTrans = Transformation.CreateIdentityMatrix(3);
+	    		
+	        	this.repaint();
 	        } else if(newFile.toLowerCase().endsWith("viw.txt")) {
 	        	viwFile = newFile;
 	        	openViewFile();
+	        	
+	        	//initialize the current matrix and the total matrix
+	    		totalTrans = Transformation.CreateIdentityMatrix(3);
+	    		currentTrans = Transformation.CreateIdentityMatrix(3);
+	    		
+	    		this.repaint();
 	        }
 	    }
 
