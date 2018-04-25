@@ -174,7 +174,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		    vectorVertex = Mathematics.multMatrixAndVertex(transMatrix, verticesList[i]);
 		    vertexX = vectorVertex[0][0];
 		    vertexY = vectorVertex[1][0];
-		    vertexZ = vectorVertex[1][0];
+		    vertexZ = vectorVertex[2][0];
 		    verticesDraw[i].setX(vertexX);
 		    verticesDraw[i].setY(vertexY);
 		    verticesDraw[i].setZ(vertexZ);
