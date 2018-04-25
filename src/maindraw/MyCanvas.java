@@ -52,8 +52,8 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		openViewFile();
 		
 		//initialize the current matrix and the total matrix
-		totalTrans = Transformation.CreateIdentityMatrix(3);
-		currentTrans = Transformation.CreateIdentityMatrix(3);
+		totalTrans = Transformation.IdentityMatrix(3);
+		currentTrans = Transformation.IdentityMatrix(3);
 		
 		//set the first click point and the end click point
 		vectorStart = new double[2];
@@ -107,9 +107,9 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	 */
 	public void openViewFile() {
 		
-		double coordinateXCenterWindows = 0, coordinateYCenterWindows = 0;
+		double coordinateX = 0, coordinateY = 0;
 		double direction = 0;
-		double[][] trans1 , rotate1, matrixTr2, trans2, scale1, Transformationc2;
+		double[][] trans1 , rotate1, trans2, scale1;
 		double windowWidth = 0, windowHigh = 0;
 		
 		
@@ -118,8 +118,8 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		try {
 			setScan = new Scanner(viewFile);
 			setScan.next();
-			coordinateXCenterWindows = setScan.nextDouble();
-			coordinateYCenterWindows = setScan.nextDouble();
+			coordinateX = setScan.nextDouble();
+			coordinateY = setScan.nextDouble();
 			setScan.next();
 			direction = setScan.nextDouble();
 			setScan.next();
@@ -135,10 +135,10 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		}
 		
 		//create the view matrix
-		trans1 = Transformation.CreateTranslateMatrix2D(-coordinateXCenterWindows, -coordinateYCenterWindows);
-		rotate1 = Transformation.CreateRotateMatrix2D(-1 * Math.toRadians(direction));
-		scale1 = Transformation.CreateScaleMatrix2D(viewWidth / windowWidth, (-1) * viewHigh / windowHigh);
-		trans2 = Transformation.CreateTranslateMatrix2D(viewWidth/2 + 20, viewHigh/2 + 20);
+		trans1 = Transformation.TranslateMatrix2D(-coordinateX, -coordinateY);
+		rotate1 = Transformation.RotateMatrix2D(-1 * Math.toRadians(direction));
+		scale1 = Transformation.ScaleMatrix2D(viewWidth / windowWidth, (-1) * viewHigh / windowHigh);
+		trans2 = Transformation.TranslateMatrix2D(viewWidth/2 + 20, viewHigh/2 + 20);
 			
 		viewMatrix = Mathematics.multiplicateMatrix(trans2, scale1);
 		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, rotate1);
@@ -270,11 +270,11 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		scaleParameter = radiusPEnd / radiusPStart;
 		
 		//Current Transformation is translate(cx,cy) * scale(s,s) * translate(-cx,-cy) 
-		currentTrans = Transformation.CreateScaleMatrix2D(scaleParameter, scaleParameter);
+		currentTrans = Transformation.ScaleMatrix2D(scaleParameter, scaleParameter);
 		currentTrans = Mathematics.multiplicateMatrix
 			 (Mathematics.multiplicateMatrix
-					 (Transformation.CreateTranslateMatrix2D(centerX, centerY), currentTrans)
-					 , Transformation.CreateTranslateMatrix2D(-centerX, -centerY));
+					 (Transformation.TranslateMatrix2D(centerX, centerY), currentTrans)
+					 , Transformation.TranslateMatrix2D(-centerX, -centerY));
 	}
 	
 	/**
@@ -297,11 +297,11 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		double angleFinish = angleStart - angleEnd;
 		
 		//Current Transformation is translate(cx,cy) * rotate(angle) * translate(-cx,-cy) 
-		currentTrans = Transformation.CreateRotateMatrix2D(Math.toRadians(angleFinish));
+		currentTrans = Transformation.RotateMatrix2D(Math.toRadians(angleFinish));
 		currentTrans = Mathematics.multiplicateMatrix
 				 (Mathematics.multiplicateMatrix
-						 (Transformation.CreateTranslateMatrix2D(centerX, centerY), currentTrans)
-						 , Transformation.CreateTranslateMatrix2D(-centerX, -centerY));
+						 (Transformation.TranslateMatrix2D(centerX, centerY), currentTrans)
+						 , Transformation.TranslateMatrix2D(-centerX, -centerY));
 	}
 	
 	/**
@@ -314,7 +314,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	 */
 	public void executeAction(String type) {
 		switch(type) {
-		 case "T":  currentTrans = Transformation.CreateTranslateMatrix2D(pEnd.getX() - pStart.getX(),
+		 case "T":  currentTrans = Transformation.TranslateMatrix2D(pEnd.getX() - pStart.getX(),
 					pEnd.getY() - pStart.getY());
          break;
 		 case "SD":
@@ -349,7 +349,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		
 		//save the new total transformation and initialization the currentTrans
 		totalTrans = Mathematics.multiplicateMatrix(currentTrans, totalTrans);
-		currentTrans = Transformation.CreateIdentityMatrix(3);
+		currentTrans = Transformation.IdentityMatrix(3);
 		this.repaint();
 	}
 	
@@ -377,8 +377,8 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	    	}
 	    	
 	    	//reset the current matrix and the total matrix
-			totalTrans = Transformation.CreateIdentityMatrix(3);
-			currentTrans = Transformation.CreateIdentityMatrix(3);
+			totalTrans = Transformation.IdentityMatrix(3);
+			currentTrans = Transformation.IdentityMatrix(3);
 	    	
 			//draw
 	    	this.repaint();
@@ -398,8 +398,8 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	        	openScreenFile();
 	        	
 	        	//initialize the current matrix and the total matrix
-	    		totalTrans = Transformation.CreateIdentityMatrix(3);
-	    		currentTrans = Transformation.CreateIdentityMatrix(3);
+	    		totalTrans = Transformation.IdentityMatrix(3);
+	    		currentTrans = Transformation.IdentityMatrix(3);
 	    		
 	        	this.repaint();
 	        } else if(newFile.toLowerCase().endsWith("viw.txt")) {
@@ -407,8 +407,8 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	        	openViewFile();
 	        	
 	        	//initialize the current matrix and the total matrix
-	    		totalTrans = Transformation.CreateIdentityMatrix(3);
-	    		currentTrans = Transformation.CreateIdentityMatrix(3);
+	    		totalTrans = Transformation.IdentityMatrix(3);
+	    		currentTrans = Transformation.IdentityMatrix(3);
 	    		
 	    		this.repaint();
 	        }
