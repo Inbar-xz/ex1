@@ -4,11 +4,14 @@ package maindraw;
 
 import java.awt.Canvas;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.FileDialog;
 import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Polygon;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -22,9 +25,9 @@ import utils.Mathematics;
 import shape.Vertex;
 import shape.Edge;
 
-public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListener, KeyListener{
+public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListener, KeyListener, ComponentListener{
 
-	private static final long serialVersionUID = 1L;
+		private static final long serialVersionUID = 1L;
 	
 	public static String scnFile = "ex2.scn.txt";
 	public static String viwFile = "ex2.viw.txt";
@@ -64,6 +67,10 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		addMouseMotionListener(this);
 	}
 	
+	/**
+	 * open the screen file and set the vertices and the edges according 
+	 * to the data in the file.
+	 */
 	public void openScreenFile() {
 		File screenFile = new File(scnFile);
 		try {
@@ -94,11 +101,15 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		}
 	}
 	
+	/**
+	 * open the view file and set the view matrix according to the data
+	 * in the file. also set the center and the size according to that data.
+	 */
 	public void openViewFile() {
 		
 		double coordinateXCenterWindows = 0, coordinateYCenterWindows = 0;
 		double direction = 0;
-		double[][] matrixTr1 , matrixRo, matrixTr2, matrixTr3, Transformationc1, Transformationc2;
+		double[][] trans1 , rotate1, matrixTr2, trans2, scale1, Transformationc2;
 		double windowWidth = 0, windowHigh = 0;
 		
 		
@@ -124,18 +135,14 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		}
 		
 		//create the view matrix
-		matrixTr1 = Transformation.CreateTranslateMatrix2D(-coordinateXCenterWindows, -coordinateYCenterWindows);
-		matrixRo = Transformation.CreateRotateMatrix2D(-1 * Math.toRadians(direction));
-		Transformationc1 = Transformation.CreateScaleMatrix2D(viewWidth / windowWidth, viewHigh / windowHigh);
-		matrixTr2 = Transformation.CreateTranslateMatrix2D(20, 20);
-	    Transformationc2 = Transformation.CreateScaleMatrix2D(1, -1);
-		matrixTr3 = Transformation.CreateTranslateMatrix2D(0, viewHigh + 40);
-		
-		viewMatrix = Mathematics.multiplicateMatrix(matrixTr3, Transformationc2);	
-		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, matrixTr2);
-		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, Transformationc1);
-		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, matrixRo);
-		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, matrixTr1);
+		trans1 = Transformation.CreateTranslateMatrix2D(-coordinateXCenterWindows, -coordinateYCenterWindows);
+		rotate1 = Transformation.CreateRotateMatrix2D(-1 * Math.toRadians(direction));
+		scale1 = Transformation.CreateScaleMatrix2D(viewWidth / windowWidth, (-1) * viewHigh / windowHigh);
+		trans2 = Transformation.CreateTranslateMatrix2D(viewWidth/2 + 20, viewHigh/2 + 20);
+			
+		viewMatrix = Mathematics.multiplicateMatrix(trans2, scale1);
+		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, rotate1);
+		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, trans1);
 		
 		
 		//set the center vertex
@@ -166,8 +173,8 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		for (int i = 0; i < verticesNum; i++) {
 			vectorVertex = Transformation.vertexToVector2D(verticesList[i]);
 		    vectorVertex = Mathematics.multiplicateMatrix(transMatrix, vectorVertex);
-		    vertexX = vectorVertex[0][0] + margins;
-		    vertexY = vectorVertex[1][0] + margins;
+		    vertexX = vectorVertex[0][0];
+		    vertexY = vectorVertex[1][0];
 		    verticesDraw[i].setX(vertexX);
 		    verticesDraw[i].setY(vertexY);
 		}
@@ -413,6 +420,12 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	}
 	
 	@Override
+	public void componentResized(ComponentEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	@Override
 	public void mouseClicked(MouseEvent arg0) {
 		// TODO Auto-generated method stub
 		
@@ -441,6 +454,24 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 
 	@Override
 	public void keyTyped(KeyEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void componentHidden(ComponentEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void componentMoved(ComponentEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void componentShown(ComponentEvent e) {
 		// TODO Auto-generated method stub
 		
 	}

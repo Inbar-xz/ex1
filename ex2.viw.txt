@@ -1,4 +1,4 @@
-Origin -140 -100
-Direction 30
+Origin 0 0
+Direction 0
 Size 350 350
 Resolution 250 250
