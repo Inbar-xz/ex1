@@ -140,9 +140,9 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		scale1 = Transformation.ScaleMatrix2D(viewWidth / windowWidth, (-1) * viewHigh / windowHigh);
 		trans2 = Transformation.TranslateMatrix2D(viewWidth/2 + 20, viewHigh/2 + 20);
 			
-		viewMatrix = Mathematics.multiplicateMatrix(trans2, scale1);
-		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, rotate1);
-		viewMatrix = Mathematics.multiplicateMatrix(viewMatrix, trans1);
+		viewMatrix = Mathematics.multMatrixs(trans2, scale1);
+		viewMatrix = Mathematics.multMatrixs(viewMatrix, rotate1);
+		viewMatrix = Mathematics.multMatrixs(viewMatrix, trans1);
 		
 		
 		//set the center vertex
@@ -160,23 +160,24 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	 */
 	public void paint(Graphics g) {
 		
-		double vertexX, vertexY;
+		double vertexX, vertexY, vertexZ;
 		double[][] transMatrix;
 		
 		//mult all the translations
-		transMatrix = Mathematics.multiplicateMatrix(currentTrans, totalTrans);
-		transMatrix = Mathematics.multiplicateMatrix(transMatrix, viewMatrix);
+		transMatrix = Mathematics.multMatrixs(currentTrans, totalTrans);
+		transMatrix = Mathematics.multMatrixs(transMatrix, viewMatrix);
 		
 		//apply changes on the vertices in verticesDraw, using the origin vertices in verticesList
 		int verticesNum = verticesList.length;
 		double[][] vectorVertex = new double [3][1];
 		for (int i = 0; i < verticesNum; i++) {
-			vectorVertex = Transformation.vertexToVector2D(verticesList[i]);
-		    vectorVertex = Mathematics.multiplicateMatrix(transMatrix, vectorVertex);
+		    vectorVertex = Mathematics.multMatrixAndVertex(transMatrix, verticesList[i]);
 		    vertexX = vectorVertex[0][0];
 		    vertexY = vectorVertex[1][0];
+		    vertexZ = vectorVertex[1][0];
 		    verticesDraw[i].setX(vertexX);
 		    verticesDraw[i].setY(vertexY);
+		    verticesDraw[i].setZ(vertexZ);
 		}
 		
 		//draw the new vertices and edges
@@ -271,8 +272,8 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		
 		//Current Transformation is translate(cx,cy) * scale(s,s) * translate(-cx,-cy) 
 		currentTrans = Transformation.ScaleMatrix2D(scaleParameter, scaleParameter);
-		currentTrans = Mathematics.multiplicateMatrix
-			 (Mathematics.multiplicateMatrix
+		currentTrans = Mathematics.multMatrixs
+			 (Mathematics.multMatrixs
 					 (Transformation.TranslateMatrix2D(centerX, centerY), currentTrans)
 					 , Transformation.TranslateMatrix2D(-centerX, -centerY));
 	}
@@ -298,8 +299,8 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		
 		//Current Transformation is translate(cx,cy) * rotate(angle) * translate(-cx,-cy) 
 		currentTrans = Transformation.RotateMatrix2D(Math.toRadians(angleFinish));
-		currentTrans = Mathematics.multiplicateMatrix
-				 (Mathematics.multiplicateMatrix
+		currentTrans = Mathematics.multMatrixs
+				 (Mathematics.multMatrixs
 						 (Transformation.TranslateMatrix2D(centerX, centerY), currentTrans)
 						 , Transformation.TranslateMatrix2D(-centerX, -centerY));
 	}
@@ -348,7 +349,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		executeAction(transType);
 		
 		//save the new total transformation and initialization the currentTrans
-		totalTrans = Mathematics.multiplicateMatrix(currentTrans, totalTrans);
+		totalTrans = Mathematics.multMatrixs(currentTrans, totalTrans);
 		currentTrans = Transformation.IdentityMatrix(3);
 		this.repaint();
 	}

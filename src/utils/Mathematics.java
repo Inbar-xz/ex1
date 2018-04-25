@@ -4,6 +4,8 @@ package utils;
 
 import java.awt.Point;
 
+import shape.Vertex;
+
 /**
  * Math functions class.
  */
@@ -118,12 +120,26 @@ public class Mathematics {
     }
     
     /**
+     * calculate the multipication of matrix and vector(point)
+     * @param matrixA
+     * @param ver
+     * @return
+     */
+    public static double[][] multMatrixAndVertex(double[][] matrixA, Vertex ver){
+    	double vectorVertex[][] = new double[3][1];
+        vectorVertex[0][0] = ver.getX();
+        vectorVertex[1][0] = ver.getY();
+        vectorVertex[2][0] = ver.getZ();
+        return multMatrixs(matrixA, vectorVertex);
+    }
+    
+    /**
      * calculate the multipication of two matrix in same size
      * @param matrixA is first matrix.
      * @param matrixB is second matrix.
      * @return multipication matrix(C = A * B)
      */
-    public static double[][] multiplicateMatrix(double[][] matrixA, double[][] matrixB) {
+    public static double[][] multMatrixs(double[][] matrixA, double[][] matrixB) {
 
         int aRows = matrixA.length;
         int aColumns = matrixA[0].length;
