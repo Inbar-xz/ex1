@@ -47,6 +47,28 @@ public class Mathematics {
     }
     
     /**
+     * calculate the distance between two vertices.
+     * @param p1 is first point.
+     * @param x is x of second point.
+     * @param y is y of second point.
+     * @return distance
+     */
+    public static double distance(Vertex p1, Vertex p2) {
+        return Math.sqrt(Math.pow(p1.getX() - p2.getX(), 2)
+                    + Math.pow(p1.getY() - p2.getY(), 2));
+    }
+    
+    /**
+     * calculate the vectorLenght.
+     * @param v vector.
+     * @return length
+     */
+    public static double vectorLength(double[] v) {
+        return Math.sqrt(Math.pow(v[0], 2)
+                    + Math.pow(v[1], 2));
+    }
+    
+    /**
      * Return a^2 + b^2.
      *
      * @param a first number
@@ -201,4 +223,18 @@ public class Mathematics {
                 y[j] += a[i][j] * x[i];
         return y;
     }
+    
+    /**
+	 * get the angle from the vector to x axis
+	 * @param vector
+	 * @return
+	 */
+	public static double angleWithXAxis(double[] vector) {
+		double angle;
+		float RAD2DEG = 180.0f / 3.14159f;
+		// atan2 receives first Y second X
+		angle = Math.atan2(vector[1], vector[0]) * RAD2DEG;
+		if (angle < 0) angle += 360.0f;
+		return angle;
+	}
 }

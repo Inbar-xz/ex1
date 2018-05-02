@@ -19,6 +19,8 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 import utils.Transformation;
 import utils.Mathematics;
@@ -27,7 +29,7 @@ import shape.Edge;
 
 public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListener, KeyListener, ComponentListener{
 
-		private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 	
 	public static String scnFile = "ex2.scn.txt";
 	public static String viwFile = "ex2.viw.txt";
@@ -36,11 +38,12 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	private Point pStart, pEnd;
 	private int margins = 20;
 	private double centerX , centerY;
-	private double viewWidth , viewHigh;
+	private int viewWidth , viewHigh;
 	private double[] vectorStart, vectorEnd;
 	private double[][] viewMatrix, currentTrans, totalTrans;
 	private Vertex verticesList[], verticesDraw[];
 	private Edge edgesList[];
+	private boolean cutFlag = false;
 	
 	/**
 	 * constructor. read data from files, create the view matrix,
@@ -126,8 +129,8 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 			windowWidth = setScan.nextDouble();
 			windowHigh = setScan.nextDouble();
 			setScan.next();
-			viewWidth = setScan.nextDouble();
-			viewHigh = setScan.nextDouble();
+			viewWidth = setScan.nextInt();
+			viewHigh = setScan.nextInt();
 			setScan.close();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -184,13 +187,267 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		g.drawRect(margins, margins, (int)viewWidth, (int)viewHigh);
 		Polygon p = new Polygon();
 		int edgesNum = edgesList.length;
+		Edge cutLine;
+		Edge edgesListDraw[];
+		int counterCut = 0;
+		
+		//if need to cut, create new list of edges to draw
+		if (cutFlag) {
+			edgesListDraw = new Edge[edgesNum];
+			for (int i = 0; i < edgesNum; i++) {
+				cutLine = clipLine(edgesList[i]);
+				if (cutLine != null) {
+					edgesListDraw[counterCut] = cutLine;
+					counterCut++;
+				}
+			}
+			edgesNum = counterCut;
+		} else {
+			edgesListDraw = edgesList;
+		}
+		
+		//draw the edges
 		for (int i = 0; i < edgesNum; i++) {
-			p.addPoint((int) edgesList[i].getV1().getX(), (int) edgesList[i].getV1().getY());
-			p.addPoint((int) edgesList[i].getV2().getX(), (int) edgesList[i].getV2().getY());	
+			p.addPoint((int) edgesListDraw[i].getV1().getX(), (int) edgesListDraw[i].getV1().getY());
+			p.addPoint((int) edgesListDraw[i].getV2().getX(), (int) edgesListDraw[i].getV2().getY());	
 			g.setColor(Color.BLUE);
 			g.drawPolygon(p);
 			p.reset();
 		}
+	}
+	
+	public Edge clipLine(Edge line) {
+		
+		int xMax = viewWidth - margins;
+		int xMin = margins;
+		int yMax = viewHigh - margins;
+		int yMin = margins;
+		
+		//go according to the Chohen-Sutherland algo.
+		Vertex vStart = line.getV1();
+		Vertex vEnd = line.getV2();
+		
+		int vStartBit, vEndBit;
+		
+		//create the bit value of each point
+		vStartBit = bitValue(vStart);
+		vEndBit = bitValue(vEnd);
+		
+		//if it's not zero, then the line outside the window
+		if ((vStartBit & vEndBit) != 0) {
+			return null;
+		}
+		
+		//if it's zero, then all the line in the window
+		if ((vStartBit | vEndBit) == 0) {
+			return line;
+		}
+		
+		//else, calculate the intersection point
+		//if vStart inside the window, swap with vEnd
+		if (vStartBit == 0) {
+			Vertex copy = vStart;
+			vStart = vEnd;
+			vEnd = copy;
+			vStartBit = vEndBit;
+		}
+		
+		double x, y;
+		double tLeft, tRight, tTop, tDown;
+		double[] N = new double[2];
+		Vertex Q;
+		double d1, d2, angle1, angle2 = 0, denominator, QTovStartLen, QTovStartAngle, nLen;
+		
+		//denominator calculation 
+		double [] vStartTovEnd = new double[2];
+		vStartTovEnd[0] = vEnd.getX() - vStart.getX();
+		vStartTovEnd[1] = vEnd.getY() - vStart.getY();
+		d2 = Mathematics.vectorLength(vStartTovEnd);
+		
+		List<Double> t = new ArrayList<Double>();
+		
+		//if there is intersection with the left side of the window
+		if ((vStartBit & 0x8) != 0) {
+			
+			//use the points (xMin, yMax), (xMin, yMin) to create normal to the window side
+			N[0] = yMax - yMin;
+			N[1] = 0;
+			
+			//create the vector from Q = (xMin, yMax) to vStart
+			double [] QTovStart = new double[2];
+			QTovStart[0] = vStart.getX() - xMin;
+			QTovStart[1] = vStart.getY() - yMax;
+			
+			t.add(calculateT(QTovStart, N, vStartTovEnd, d2));
+			/*
+			//calculate the length of the vector QTovStart and hid angle with N
+			QTovStartLen = Mathematics.vectorLength(QTovStart);
+			QTovStartAngle = Math.atan2(QTovStart[0],QTovStart[1]) - Math.atan2(N[0], N[1]);
+			
+			//calculate the denominator of the t formula
+			angle2 = Math.atan2(vStartTovEnd[0],vStartTovEnd[1]) - Math.atan2(N[0], N[1]);
+			denominator = -Mathematics.vectorLength(N) * d2 * Math.cos(angle2);
+			
+			//calculate the t and add to the list
+			tLeft = (Mathematics.vectorLength(N) * QTovStartLen * Math.cos(QTovStartAngle)) / denominator;
+			t.add(tLeft);*/
+		}
+		
+		//if there is intersection with the right side of the window
+		if ((vStartBit & 0x4) != 0) {
+			
+			//use the points (xMax, yMin), (xMax, yMax) to create normal to the window side
+			//V = (xMax - xMax, yMax - yMin)
+			N[0] = yMin - yMax;
+			N[1] = 0;
+			
+			//create the vector from Q = (xMax, yMin) to vStart
+			double [] QTovStart = new double[2];
+			QTovStart[0] = vStart.getX() - xMax;
+			QTovStart[1] = vStart.getY() - yMin;
+			
+			//calculate the length of the vector QTovStart and his angle with N
+			QTovStartLen = Mathematics.vectorLength(QTovStart);
+			QTovStartAngle = Math.atan2(QTovStart[0],QTovStart[1]) - Math.atan2(N[0], N[1]);
+			
+			//calculate the denominator of the t formula
+			angle2 = Math.atan2(vStartTovEnd[0],vStartTovEnd[1]) - Math.atan2(N[0], N[1]);
+			nLen = Mathematics.vectorLength(N);
+			denominator = -nLen * d2 * Math.cos(angle2);
+			
+			//calculate the t and add to the list
+			tRight = (nLen * QTovStartLen * Math.cos(QTovStartAngle)) / denominator;
+			
+			t.add(tRight);
+		}
+		
+		//if there is intersection with the top(down) side of the window
+		if ((vStartBit & 0x2) != 0) {
+			
+			//use the points (xMax, yMax), (xMin, yMax) to create normal to the window side
+			N[0] = 0;
+			N[1] = xMin - xMax;
+			
+			//create the vector from Q = (xMax, yMax) to vStart
+			double [] QTovStart = new double[2];
+			QTovStart[0] = vStart.getX() - xMax;
+			QTovStart[1] = vStart.getY() - yMax;
+			
+			//calculate the length of the vector QTovStart and hid angle with N
+			QTovStartLen = Mathematics.vectorLength(QTovStart);
+			QTovStartAngle = Math.atan2(QTovStart[0],QTovStart[1]) - Math.atan2(N[0], N[1]);
+			
+			
+			//calculate the denominator of the t formula
+			angle2 = Math.atan2(vStartTovEnd[0],vStartTovEnd[1]) - Math.atan2(N[0], N[1]);
+			denominator = -Mathematics.vectorLength(N) * d2 * Math.cos(angle2);
+			
+			//calculate the t and add to the list
+			tTop = (Mathematics.vectorLength(N) * QTovStartLen * Math.cos(QTovStartAngle)) / denominator;
+			t.add(tTop);
+		}
+		
+		//if there is intersection with the down(up) side of the window
+		if ((vStartBit & 0x1) != 0) {
+			
+			//use the points (xMax, yMin), (xMin, yMin) to create normal to the window side
+			N[0] = 0;
+			N[1] = xMin - xMax;
+			
+			//create the vector from Q = (xMax, yMin) to vStart
+			double [] QTovStart = new double[2];
+			QTovStart[0] = vStart.getX() - xMax;
+			QTovStart[1] = vStart.getY() - yMin;
+			
+			//calculate the length of the vector QTovStart and hid angle with N
+			QTovStartLen = Mathematics.vectorLength(QTovStart);
+			QTovStartAngle = Math.atan2(QTovStart[0],QTovStart[1]) - Math.atan2(N[0], N[1]);
+			
+			
+			//calculate the denominator of the t formula
+			angle2 = Math.atan2(vStartTovEnd[0],vStartTovEnd[1]) - Math.atan2(N[0], N[1]);
+			denominator = -Mathematics.vectorLength(N) * d2 * Math.cos(angle2);
+			
+			//calculate the t and add to the list
+			tDown = (Mathematics.vectorLength(N) * QTovStartLen * Math.cos(QTovStartAngle)) / denominator;
+			t.add(tDown);
+		}
+		
+		double con = d2 * Math.cos(Math.toRadians(angle2));
+		Vertex interPoint;
+		
+		//find the minimal t
+		if (con > 0) {
+			double min = t.get(0);
+			for (int i = 0; i < t.size(); i++) {
+				if (t.get(i) > 0 && t.get(i) < 1 && t.get(i) < min) {
+					min = t.get(i);
+				}
+			}
+			
+			x = vStart.getX() + vStartTovEnd[0] * min;
+			y = vStart.getY() + vStartTovEnd[1] * min;
+			interPoint = new Vertex(x, y);
+		//find the maximal t	
+		} else {
+			double max = t.get(0);
+			for (int i = 0; i < t.size(); i++) {
+				if (t.get(i) > 0 && t.get(i) < 1 && t.get(i) > max) {
+					max = t.get(i);
+				}
+			}
+			
+			x = vStart.getX() + vStartTovEnd[0] * max;
+			y = vStart.getY() + vStartTovEnd[1] * max;
+			interPoint = new Vertex(x, y);
+		}
+		
+		Edge newLine = new Edge(interPoint, vEnd);
+		return clipLine(newLine);
+	}
+	
+	private double calculateT(double [] QTovStart, double [] N, double [] vStartTovEnd, double d2) {
+		
+		//calculate the length of the vector QTovStart and hid angle with N
+		double QTovStartLen = Mathematics.vectorLength(QTovStart);
+		double QTovStartAngle = Math.atan2(QTovStart[0],QTovStart[1]) - Math.atan2(N[0], N[1]);
+		
+		
+		//calculate the denominator of the t formula
+		double angle2 = Math.atan2(vStartTovEnd[0],vStartTovEnd[1]) - Math.atan2(N[0], N[1]);
+		double denominator = -Mathematics.vectorLength(N) * d2 * Math.cos(angle2);
+		
+		//calculate the t and add to the list
+		return (Mathematics.vectorLength(N) * QTovStartLen * Math.cos(QTovStartAngle)) / denominator;
+		
+	}
+	
+	public int bitValue(Vertex v) {
+		
+		int xMax = viewWidth + margins;
+		int xMin = margins;
+		int yMax = viewHigh + margins;
+		int yMin = margins;
+		
+		int vBit = 0;
+		
+		if (v.getY() < yMin) {
+			vBit |= 0x1;
+		}
+		
+		if (v.getY() > yMax) {
+			vBit |= 0x2;
+		}
+		
+		if (v.getX() > xMax) {
+			vBit |= 0x4;
+		}
+		
+		if (v.getX() < xMin) {
+			vBit |= 0x8;
+		}
+		
+		return vBit;
 	}
 	
 	/**
@@ -243,20 +500,6 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	}
 	
 	/**
-	 * get the angle from the vector to x axis
-	 * @param vector
-	 * @return
-	 */
-	public double getAngleFromVectorToXAxis(double[] vector) {
-		double angle;
-		float RAD2DEG = 180.0f / 3.14159f;
-		// atan2 receives first Y second X
-		angle = Math.atan2(vector[1], vector[0]) * RAD2DEG;
-		if (angle < 0) angle += 360.0f;
-		return angle;
-	}
-	
-	/**
 	 * execute scale transformation.
 	 */
 	public void executeScale() {
@@ -293,8 +536,8 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		
 		//calculate the angleStart and angleEnd according to function that
 		//calculate the angle between vector to XAxis.
-		double angleStart = getAngleFromVectorToXAxis(vectorStart);
-		double angleEnd = getAngleFromVectorToXAxis(vectorEnd);
+		double angleStart = Mathematics.angleWithXAxis(vectorStart);
+		double angleEnd = Mathematics.angleWithXAxis(vectorEnd);
 		double angleFinish = angleStart - angleEnd;
 		
 		//Current Transformation is translate(cx,cy) * rotate(angle) * translate(-cx,-cy) 
@@ -383,9 +626,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	    	
 			//draw
 	    	this.repaint();
-	    }
-
-	    if (key == KeyEvent.VK_L) {
+	    } else if (key == KeyEvent.VK_L) {
 	    	
 	    	//get new file from user
 	    	FileDialog dialog = new FileDialog((Frame)null, "Select File to Open");
@@ -413,10 +654,11 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	    		
 	    		this.repaint();
 	        }
-	    }
-
-	    if (key == KeyEvent.VK_Q) {
+	    } else if (key == KeyEvent.VK_Q) {
 	    	System.exit(0);
+	    } else if (key == KeyEvent.VK_C) {
+	    	cutFlag = !cutFlag;
+	    	this.repaint();
 	    }
 	}
 	
