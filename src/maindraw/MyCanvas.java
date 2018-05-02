@@ -243,7 +243,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 			return line;
 		}
 		
-		//else, calculate the intersection point
+		//else, calculate the intersection point with Cyrus Beck algo
 		//if vStart inside the window, swap with vEnd
 		if (vStartBit == 0) {
 			Vertex copy = vStart;
@@ -252,19 +252,14 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 			vStartBit = vEndBit;
 		}
 		
-		double x, y;
-		double tLeft, tRight, tTop, tDown;
-		double[] N = new double[2];
-		Vertex Q;
-		double d1, d2, angle1, angle2 = 0, denominator, QTovStartLen, QTovStartAngle, nLen;
-		
-		//denominator calculation 
+		//param of the denominator calculation 
 		double [] vStartTovEnd = new double[2];
 		vStartTovEnd[0] = vEnd.getX() - vStart.getX();
 		vStartTovEnd[1] = vEnd.getY() - vStart.getY();
-		d2 = Mathematics.vectorLength(vStartTovEnd);
+		double startToEndLen = Mathematics.vectorLength(vStartTovEnd);
 		
-		List<Double> t = new ArrayList<Double>();
+		List<Double> validT = new ArrayList<Double>();
+		double[] N = new double[2];
 		
 		//if there is intersection with the left side of the window
 		if ((vStartBit & 0x8) != 0) {
@@ -278,19 +273,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 			QTovStart[0] = vStart.getX() - xMin;
 			QTovStart[1] = vStart.getY() - yMax;
 			
-			t.add(calculateT(QTovStart, N, vStartTovEnd, d2));
-			/*
-			//calculate the length of the vector QTovStart and hid angle with N
-			QTovStartLen = Mathematics.vectorLength(QTovStart);
-			QTovStartAngle = Math.atan2(QTovStart[0],QTovStart[1]) - Math.atan2(N[0], N[1]);
-			
-			//calculate the denominator of the t formula
-			angle2 = Math.atan2(vStartTovEnd[0],vStartTovEnd[1]) - Math.atan2(N[0], N[1]);
-			denominator = -Mathematics.vectorLength(N) * d2 * Math.cos(angle2);
-			
-			//calculate the t and add to the list
-			tLeft = (Mathematics.vectorLength(N) * QTovStartLen * Math.cos(QTovStartAngle)) / denominator;
-			t.add(tLeft);*/
+			calculateT(QTovStart, N, vStartTovEnd, startToEndLen, validT);
 		}
 		
 		//if there is intersection with the right side of the window
@@ -306,19 +289,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 			QTovStart[0] = vStart.getX() - xMax;
 			QTovStart[1] = vStart.getY() - yMin;
 			
-			//calculate the length of the vector QTovStart and his angle with N
-			QTovStartLen = Mathematics.vectorLength(QTovStart);
-			QTovStartAngle = Math.atan2(QTovStart[0],QTovStart[1]) - Math.atan2(N[0], N[1]);
-			
-			//calculate the denominator of the t formula
-			angle2 = Math.atan2(vStartTovEnd[0],vStartTovEnd[1]) - Math.atan2(N[0], N[1]);
-			nLen = Mathematics.vectorLength(N);
-			denominator = -nLen * d2 * Math.cos(angle2);
-			
-			//calculate the t and add to the list
-			tRight = (nLen * QTovStartLen * Math.cos(QTovStartAngle)) / denominator;
-			
-			t.add(tRight);
+			calculateT(QTovStart, N, vStartTovEnd, startToEndLen, validT);
 		}
 		
 		//if there is intersection with the top(down) side of the window
@@ -333,18 +304,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 			QTovStart[0] = vStart.getX() - xMax;
 			QTovStart[1] = vStart.getY() - yMax;
 			
-			//calculate the length of the vector QTovStart and hid angle with N
-			QTovStartLen = Mathematics.vectorLength(QTovStart);
-			QTovStartAngle = Math.atan2(QTovStart[0],QTovStart[1]) - Math.atan2(N[0], N[1]);
-			
-			
-			//calculate the denominator of the t formula
-			angle2 = Math.atan2(vStartTovEnd[0],vStartTovEnd[1]) - Math.atan2(N[0], N[1]);
-			denominator = -Mathematics.vectorLength(N) * d2 * Math.cos(angle2);
-			
-			//calculate the t and add to the list
-			tTop = (Mathematics.vectorLength(N) * QTovStartLen * Math.cos(QTovStartAngle)) / denominator;
-			t.add(tTop);
+			calculateT(QTovStart, N, vStartTovEnd, startToEndLen, validT);
 		}
 		
 		//if there is intersection with the down(up) side of the window
@@ -359,46 +319,41 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 			QTovStart[0] = vStart.getX() - xMax;
 			QTovStart[1] = vStart.getY() - yMin;
 			
-			//calculate the length of the vector QTovStart and hid angle with N
-			QTovStartLen = Mathematics.vectorLength(QTovStart);
-			QTovStartAngle = Math.atan2(QTovStart[0],QTovStart[1]) - Math.atan2(N[0], N[1]);
-			
-			
-			//calculate the denominator of the t formula
-			angle2 = Math.atan2(vStartTovEnd[0],vStartTovEnd[1]) - Math.atan2(N[0], N[1]);
-			denominator = -Mathematics.vectorLength(N) * d2 * Math.cos(angle2);
-			
-			//calculate the t and add to the list
-			tDown = (Mathematics.vectorLength(N) * QTovStartLen * Math.cos(QTovStartAngle)) / denominator;
-			t.add(tDown);
+			calculateT(QTovStart, N, vStartTovEnd, startToEndLen, validT);
 		}
 		
-		double con = d2 * Math.cos(Math.toRadians(angle2));
+		double angle2 = Math.atan2(vStartTovEnd[0],vStartTovEnd[1]) - Math.atan2(N[0], N[1]);
+		double con = startToEndLen * Math.cos(Math.toRadians(angle2));
 		Vertex interPoint;
 		
 		//find the minimal t
+		if (validT.isEmpty()) {
+			return null;
+		}
+		
+		double x, y;
 		if (con > 0) {
-			double min = t.get(0);
-			for (int i = 0; i < t.size(); i++) {
-				if (t.get(i) > 0 && t.get(i) < 1 && t.get(i) < min) {
-					min = t.get(i);
+			double min = validT.get(0);
+			for (int i = 0; i < validT.size(); i++) {
+				if (validT.get(i) < min) {
+					min = validT.get(i);
 				}
 			}
 			
-			x = vStart.getX() + vStartTovEnd[0] * min;
-			y = vStart.getY() + vStartTovEnd[1] * min;
+			x = Math.ceil(vStart.getX() + vStartTovEnd[0] * min);
+			y = Math.ceil(vStart.getY() + vStartTovEnd[1] * min);
 			interPoint = new Vertex(x, y);
 		//find the maximal t	
 		} else {
-			double max = t.get(0);
-			for (int i = 0; i < t.size(); i++) {
-				if (t.get(i) > 0 && t.get(i) < 1 && t.get(i) > max) {
-					max = t.get(i);
+			double max = validT.get(0);
+			for (int i = 0; i < validT.size(); i++) {
+				if (validT.get(i) > max) {
+					max = validT.get(i);
 				}
 			}
 			
-			x = vStart.getX() + vStartTovEnd[0] * max;
-			y = vStart.getY() + vStartTovEnd[1] * max;
+			x = Math.ceil(vStart.getX() + vStartTovEnd[0] * max);
+			y = Math.ceil(vStart.getY() + vStartTovEnd[1] * max);
 			interPoint = new Vertex(x, y);
 		}
 		
@@ -406,7 +361,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		return clipLine(newLine);
 	}
 	
-	private double calculateT(double [] QTovStart, double [] N, double [] vStartTovEnd, double d2) {
+	private void calculateT(double [] QTovStart, double [] N, double [] vStartTovEnd, double startToEndLen, List<Double> t) {
 		
 		//calculate the length of the vector QTovStart and hid angle with N
 		double QTovStartLen = Mathematics.vectorLength(QTovStart);
@@ -415,10 +370,15 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		
 		//calculate the denominator of the t formula
 		double angle2 = Math.atan2(vStartTovEnd[0],vStartTovEnd[1]) - Math.atan2(N[0], N[1]);
-		double denominator = -Mathematics.vectorLength(N) * d2 * Math.cos(angle2);
+		double denominator = -Mathematics.vectorLength(N) * startToEndLen * Math.cos(angle2);
 		
 		//calculate the t and add to the list
-		return (Mathematics.vectorLength(N) * QTovStartLen * Math.cos(QTovStartAngle)) / denominator;
+		double newT = (Mathematics.vectorLength(N) * QTovStartLen * Math.cos(QTovStartAngle)) / denominator;
+		
+		//add to list if it's valid
+		if (newT < 1 && newT > 0) {
+			t.add(newT);
+		}
 		
 	}
 	
