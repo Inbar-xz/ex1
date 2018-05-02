@@ -218,9 +218,9 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	
 	public Edge clipLine(Edge line) {
 		
-		int xMax = viewWidth - margins;
+		int xMax = viewWidth + margins;
 		int xMin = margins;
-		int yMax = viewHigh - margins;
+		int yMax = viewHigh + margins;
 		int yMin = margins;
 		
 		//go according to the Chohen-Sutherland algo.
@@ -322,17 +322,17 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 			calculateT(QTovStart, N, vStartTovEnd, startToEndLen, validT);
 		}
 		
-		double angle2 = Math.atan2(vStartTovEnd[0],vStartTovEnd[1]) - Math.atan2(N[0], N[1]);
-		double con = startToEndLen * Math.cos(Math.toRadians(angle2));
-		Vertex interPoint;
-		
-		//find the minimal t
 		if (validT.isEmpty()) {
 			return null;
 		}
 		
+		//find the minimal/maximal t
+		double angle2 = Math.atan2(vStartTovEnd[0],vStartTovEnd[1]) - Math.atan2(N[0], N[1]);
+		double vecDirection = startToEndLen * Math.cos(Math.toRadians(angle2));
 		double x, y;
-		if (con > 0) {
+		Vertex interPoint;
+		
+		if (vecDirection > 0) {
 			double min = validT.get(0);
 			for (int i = 0; i < validT.size(); i++) {
 				if (validT.get(i) < min) {
@@ -363,14 +363,15 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	
 	private void calculateT(double [] QTovStart, double [] N, double [] vStartTovEnd, double startToEndLen, List<Double> t) {
 		
-		//calculate the length of the vector QTovStart and hid angle with N
+		//calculate the length of the vector QTovStart and his angle with N
 		double QTovStartLen = Mathematics.vectorLength(QTovStart);
-		double QTovStartAngle = Math.atan2(QTovStart[0],QTovStart[1]) - Math.atan2(N[0], N[1]);
-		
+		double QTovStartAngle = Math.atan2(QTovStart[0]*N[1] - QTovStart[1]*N[0], QTovStart[0]*N[0] + QTovStart[1]*N[1]);
+		System.out.println(Math.toDegrees(QTovStartAngle));
 		
 		//calculate the denominator of the t formula
-		double angle2 = Math.atan2(vStartTovEnd[0],vStartTovEnd[1]) - Math.atan2(N[0], N[1]);
+		double angle2 = Math.atan2( vStartTovEnd[0]*N[1] -vStartTovEnd[1]*N[0], vStartTovEnd[0]*N[0] + vStartTovEnd[1]*N[1]);
 		double denominator = -Mathematics.vectorLength(N) * startToEndLen * Math.cos(angle2);
+		System.out.println("line to N " + Math.toDegrees(angle2));
 		
 		//calculate the t and add to the list
 		double newT = (Mathematics.vectorLength(N) * QTovStartLen * Math.cos(QTovStartAngle)) / denominator;
@@ -379,7 +380,6 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		if (newT < 1 && newT > 0) {
 			t.add(newT);
 		}
-		
 	}
 	
 	public int bitValue(Vertex v) {
