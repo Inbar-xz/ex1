@@ -2,7 +2,6 @@
 //id: yakir - 203200530 inbar - 204885370.
 package maindraw;
 
-import java.awt.BorderLayout;
 import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Component;
@@ -160,7 +159,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		viewMatrix = Mathematics.multMatrixs(viewMatrix, rotate1);
 		viewMatrix = Mathematics.multMatrixs(viewMatrix, trans1);
 		
-		setSize((int)viewWidth + margins * 2, (int)viewHigh + margins * 2);			
+		setSize((int)viewWidth + margins * 2, (int)viewHigh + margins * 2);
 	}
 	
 	/**
@@ -351,6 +350,24 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		}
 	}
 	
+	/**
+	 * recreate the view matrix and the center
+	 */
+	public void resetViewMatrix() {
+		double[][] trans1 = Transformation.TranslateMatrix2D(-coordinateX, -coordinateY);
+		double[][] rotate1 = Transformation.RotateMatrix2D(-1 * Math.toRadians(direction));
+		double[][] scale1 = Transformation.ScaleMatrix2D(viewWidth / windowWidth, (-1) * viewHigh / windowHigh);
+		double[][] trans2 = Transformation.TranslateMatrix2D(centerX, centerY);
+			
+		viewMatrix = Mathematics.multMatrixs(trans2, scale1);
+		viewMatrix = Mathematics.multMatrixs(viewMatrix, rotate1);
+		viewMatrix = Mathematics.multMatrixs(viewMatrix, trans1);
+		
+		//set the new center vertex
+		centerX = viewWidth / 2 + margins;
+		centerY = viewHigh / 2 + margins;
+	}
+	
 	@Override
 	public void mousePressed(MouseEvent arg0) {
 		
@@ -398,10 +415,14 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	    	//reset the current matrix and the total matrix
 			totalTrans = Transformation.IdentityMatrix(3);
 			currentTrans = Transformation.IdentityMatrix(3);
+			viewWidth = (int)viwWidthSave;
+			viewHigh = (int)viwWidthSave;
+			resetViewMatrix();
 			
 			//set the window to the original size
-			this.setSize((int)viwWidthSave + margins * 2, (int)viwHighSave + margins * 2);
-	    	
+			this.setSize(viewWidth + margins * 2, viewHigh + margins * 2);
+			this.getParent().setSize(new Dimension(viewWidth + margins * 2 , viewHigh + margins * 2 ));
+
 			//draw
 	    	this.repaint();
 	    } else if (key == KeyEvent.VK_L) {
@@ -428,6 +449,8 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	    		totalTrans = Transformation.IdentityMatrix(3);
 	    		currentTrans = Transformation.IdentityMatrix(3);
 	    		
+	    		//set new size after load the file
+	    		this.getParent().setSize(new Dimension(viewWidth + margins * 2 , viewHigh + margins * 2 ));
 	    		this.repaint();
 	        }
 	    } else if (key == KeyEvent.VK_Q) {
@@ -447,19 +470,9 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		viewHigh = newSize.height - margins*2;
 		viewWidth = newSize.width - margins*2;
 		
-		double[][] trans1 = Transformation.TranslateMatrix2D(-coordinateX, -coordinateY);
-		double[][] rotate1 = Transformation.RotateMatrix2D(-1 * Math.toRadians(direction));
-		double[][] scale1 = Transformation.ScaleMatrix2D(viewWidth / windowWidth, (-1) * viewHigh / windowHigh);
-		double[][] trans2 = Transformation.TranslateMatrix2D(centerX, centerY);
-			
-		viewMatrix = Mathematics.multMatrixs(trans2, scale1);
-		viewMatrix = Mathematics.multMatrixs(viewMatrix, rotate1);
-		viewMatrix = Mathematics.multMatrixs(viewMatrix, trans1);
+		resetViewMatrix();
 		
-		//set the new center vertex
-		centerX = viewWidth / 2 + margins;
-		centerY = viewHigh / 2 + margins;
-		
+		//set the window for the clip object
 		clipObj.setWindowSize(viewWidth, viewHigh, margins);
 	}
 	

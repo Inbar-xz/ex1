@@ -171,12 +171,10 @@ public class Clip {
 		//calculate the length of the vector QTovStart and his angle with N
 		double QTovStartLen = Mathematics.vectorLength(QTovStart);
 		double QTovStartAngle = Math.atan2(QTovStart[0]*N[1] - QTovStart[1]*N[0], QTovStart[0]*N[0] + QTovStart[1]*N[1]);
-		System.out.println(Math.toDegrees(QTovStartAngle));
 		
 		//calculate the denominator of the t formula
 		double EdgeToNAngle = Math.atan2( vStartTovEnd[0]*N[1] -vStartTovEnd[1]*N[0], vStartTovEnd[0]*N[0] + vStartTovEnd[1]*N[1]);
 		double denominator = -Mathematics.vectorLength(N) * startToEndLen * Math.cos(EdgeToNAngle);
-		System.out.println("line to N " + Math.toDegrees(EdgeToNAngle));
 		
 		//calculate the t and add to the list
 		double newT = (Mathematics.vectorLength(N) * QTovStartLen * Math.cos(QTovStartAngle)) / denominator;
