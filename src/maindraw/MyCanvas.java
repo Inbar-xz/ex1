@@ -35,6 +35,10 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	private int margins = 20;
 	private double centerX , centerY;
 	private int viewWidth , viewHigh;
+	private double coordinateX = 0, coordinateY = 0;
+	private double direction = 0;
+	private double windowWidth = 0, windowHigh = 0;
+	private double viwWidthSave = 0, viwHighSave = 0;
 	private double[] vectorStart, vectorEnd;
 	private double[][] viewMatrix, currentTrans, totalTrans;
 	private Vertex verticesList[], verticesDraw[];
@@ -111,10 +115,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	 */
 	public void openViewFile(String viwFile) {
 		
-		double coordinateX = 0, coordinateY = 0;
-		double direction = 0;
 		double[][] trans1 , rotate1, trans2, scale1;
-		double windowWidth = 0, windowHigh = 0;
 		
 		
 		File viewFile = new File(viwFile);
@@ -137,6 +138,10 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		//save the original window size
+		viwWidthSave = viewWidth;
+		viwHighSave = viewHigh;
 
 		//set the center vertex
 		centerX = viewWidth / 2 + margins;
@@ -152,7 +157,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		viewMatrix = Mathematics.multMatrixs(viewMatrix, rotate1);
 		viewMatrix = Mathematics.multMatrixs(viewMatrix, trans1);
 		
-		setSize((int)viewWidth + 40, (int)viewHigh + 40);				
+		setSize((int)viewWidth + margins * 2, (int)viewHigh + margins * 2);			
 	}
 	
 	/**
@@ -229,33 +234,34 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	public String getTransType(Point point) {
 
 		//the limits of screen is [margins - (margins+viewWidth)] in this case [20 - 270]
-		double sepertation = viewWidth / 3;
+		double sepertationWidth = viewWidth / 3;
+		double sepertationHigh = viewHigh / 3;
 		String type = "";
 		
 		//if click in the right range (margins <-> viewWidth) then check transType
 		if((pStart.getX() >= margins) && (pStart.getX() <= viewWidth + margins)
-				&& (pStart.getY() >= margins) && (pStart.getY() <= viewWidth + margins)) {
+				&& (pStart.getY() >= margins) && (pStart.getY() <= viewHigh + margins)) {
 			
-			if(pStart.getX() <= margins + sepertation) {
-				if(pStart.getY() <= margins + sepertation) {
+			if(pStart.getX() <= margins + sepertationWidth) {
+				if(pStart.getY() <= margins + sepertationHigh) {
 					type = "RLU";
-				} else if(pStart.getY() <= margins + (sepertation * 2)) {
+				} else if(pStart.getY() <= margins + (sepertationHigh * 2)) {
 					type = "SL";
 				} else {
 					type = "RLD";
 				}	
-			} else if(pStart.getX() <= margins + (sepertation * 2)) {
-				if(pStart.getY() <= margins + sepertation) {
+			} else if(pStart.getX() <= margins + (sepertationWidth * 2)) {
+				if(pStart.getY() <= margins + sepertationHigh) {
 					type = "SU";
-				} else if(pStart.getY() <= margins + (sepertation * 2)) {
+				} else if(pStart.getY() <= margins + (sepertationHigh * 2)) {
 					type = "T";
 				} else {
 					type = "SD";
 				}
 			} else {
-				if(pStart.getY() <= margins + sepertation) {
+				if(pStart.getY() <= margins + sepertationHigh) {
 					type = "RRU";
-				} else if(pStart.getY() <= margins + (sepertation * 2)) {
+				} else if(pStart.getY() <= margins + (sepertationHigh * 2)) {
 					type = "SR";
 				} else {
 					type = "RRD";
@@ -389,6 +395,10 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	    	//reset the current matrix and the total matrix
 			totalTrans = Transformation.IdentityMatrix(3);
 			currentTrans = Transformation.IdentityMatrix(3);
+			
+			//set the window to the original size
+			setSize((int)viwWidthSave + margins * 2, (int)viwHighSave + margins * 2);
+			setPreferredSize(new Dimension((int)viwWidthSave + margins * 2, (int)viwHighSave + margins * 2));
 	    	
 			//draw
 	    	this.repaint();
@@ -428,41 +438,27 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	
 	@Override
 	public void componentResized(ComponentEvent e) {
-		// TODO Auto-generated method stub
-		//do here stuff for resize
-		Dimension newSize = e.getComponent().getBounds().getSize();
 		
-		//move to the origin and set the scale with the new data
-		double[][] transToOrigin = Transformation.TranslateMatrix2D(-centerX, -centerY);
-		double[][] scaleForWin = Transformation.ScaleMatrix2D(newSize.width / viewWidth, newSize.height / viewHigh);
-		int sx = newSize.width / viewWidth;
-		int sy = newSize.height / viewHigh;
+		Dimension newSize = e.getComponent().getBounds().getSize();
 		
 		//update the new data
 		viewHigh = newSize.height - margins*2;
 		viewWidth = newSize.width - margins*2;
 		
+		double[][] trans1 = Transformation.TranslateMatrix2D(-coordinateX, -coordinateY);
+		double[][] rotate1 = Transformation.RotateMatrix2D(-1 * Math.toRadians(direction));
+		double[][] scale1 = Transformation.ScaleMatrix2D(viewWidth / windowWidth, (-1) * viewHigh / windowHigh);
+		double[][] trans2 = Transformation.TranslateMatrix2D(centerX, centerY);
+			
+		viewMatrix = Mathematics.multMatrixs(trans2, scale1);
+		viewMatrix = Mathematics.multMatrixs(viewMatrix, rotate1);
+		viewMatrix = Mathematics.multMatrixs(viewMatrix, trans1);
+		
 		//set the new center vertex
 		centerX = viewWidth / 2 + margins;
 		centerY = viewHigh / 2 + margins;
 		
-		//set new data to the view matrix and move back to the new center
-		double[][] transToCenter = Transformation.TranslateMatrix2D(centerX, centerY);
-		viewMatrix = Mathematics.multMatrixs(transToOrigin, viewMatrix);
-		//viewMatrix = Mathematics.multMatrixs(scaleForWin, viewMatrix);
-		viewMatrix = Mathematics.multMatrixs(transToCenter, viewMatrix);
-		
-		//update the clip widow
 		clipObj.setWindowSize(viewWidth, viewHigh, margins);
-		/*
-		//scale the draw
-		currentTrans = Transformation.ScaleMatrix2D(1, 2);
-		currentTrans = Mathematics.multMatrixs
-			 (Mathematics.multMatrixs
-					 (Transformation.TranslateMatrix2D(centerX, centerY), currentTrans)
-					 , Transformation.TranslateMatrix2D(-centerX, -centerY));
-		//executeScale();
-		this.repaint();*/
 	}
 	
 	@Override

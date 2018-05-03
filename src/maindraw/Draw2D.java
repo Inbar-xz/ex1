@@ -23,6 +23,7 @@ public class Draw2D {
 		myFrame.addWindowListener(myWindowAdapter);
 		myFrame.pack();
 		myFrame.setVisible(true);
+		myFrame.requestFocus();
 		
 	}
 }
