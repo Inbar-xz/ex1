@@ -432,12 +432,13 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		//do here stuff for resize
 		Dimension newSize = e.getComponent().getBounds().getSize();
 		
-		//change the view matrix, cancel the last scale and trans and apply new data
-		double[][] scale1 = Transformation.ScaleMatrix2D(newSize.width / viewWidth, newSize.height / viewHigh);
-		double[][] trans2 = Transformation.TranslateMatrix2D(-centerX, -centerY);
-		viewMatrix = Mathematics.multMatrixs(viewMatrix, trans2);
+		//move to the origin and set the scale with the new data
+		double[][] transToOrigin = Transformation.TranslateMatrix2D(-centerX, -centerY);
+		double[][] scaleForWin = Transformation.ScaleMatrix2D(newSize.width / viewWidth, newSize.height / viewHigh);
+		int sx = newSize.width / viewWidth;
+		int sy = newSize.height / viewHigh;
 		
-		//update the new data		
+		//update the new data
 		viewHigh = newSize.height - margins*2;
 		viewWidth = newSize.width - margins*2;
 		
@@ -445,12 +446,23 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		centerX = viewWidth / 2 + margins;
 		centerY = viewHigh / 2 + margins;
 		
-		double[][] trans3 = Transformation.TranslateMatrix2D(centerX, centerY);
-		viewMatrix = Mathematics.multMatrixs(viewMatrix, trans3);
-		viewMatrix = Mathematics.multMatrixs(viewMatrix, scale1);
+		//set new data to the view matrix and move back to the new center
+		double[][] transToCenter = Transformation.TranslateMatrix2D(centerX, centerY);
+		viewMatrix = Mathematics.multMatrixs(transToOrigin, viewMatrix);
+		//viewMatrix = Mathematics.multMatrixs(scaleForWin, viewMatrix);
+		viewMatrix = Mathematics.multMatrixs(transToCenter, viewMatrix);
 		
-		
-		//setSize((int)viewWidth + 40, (int)viewHigh + 40);
+		//update the clip widow
+		clipObj.setWindowSize(viewWidth, viewHigh, margins);
+		/*
+		//scale the draw
+		currentTrans = Transformation.ScaleMatrix2D(1, 2);
+		currentTrans = Mathematics.multMatrixs
+			 (Mathematics.multMatrixs
+					 (Transformation.TranslateMatrix2D(centerX, centerY), currentTrans)
+					 , Transformation.TranslateMatrix2D(-centerX, -centerY));
+		//executeScale();
+		this.repaint();*/
 	}
 	
 	@Override

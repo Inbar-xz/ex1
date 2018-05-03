@@ -19,6 +19,13 @@ public class Clip {
 		this.yMin = margins;
 	}
 	
+	public void setWindowSize(int viewWidth, int viewHigh, int margins) {
+		this.xMax = viewWidth + margins;
+		this.xMin = margins;
+		this.yMax = viewHigh + margins;
+		this.yMin = margins;
+	}
+	
 	public Edge clipLine(Edge line) {
 		
 		//go according to the Chohen-Sutherland algo.
