@@ -5,6 +5,7 @@ package maindraw;
 import java.awt.Frame;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+
 public class Draw2D {
 
 	public static void main(String[] args) {
@@ -22,5 +23,6 @@ public class Draw2D {
 		myFrame.addWindowListener(myWindowAdapter);
 		myFrame.pack();
 		myFrame.setVisible(true);
+		
 	}
 }

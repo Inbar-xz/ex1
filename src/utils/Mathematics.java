@@ -3,7 +3,6 @@
 package utils;
 
 import java.awt.Point;
-
 import shape.Vertex;
 
 /**

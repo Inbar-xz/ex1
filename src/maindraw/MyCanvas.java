@@ -19,8 +19,6 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 import utils.Transformation;
 import utils.Clip;
@@ -31,9 +29,6 @@ import shape.Edge;
 public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListener, KeyListener, ComponentListener{
 
 	private static final long serialVersionUID = 1L;
-	
-	public static String scnFile = "ex2.scn.txt";
-	public static String viwFile = "ex2.viw.txt";
 	
 	private String transType;
 	private Point pStart, pEnd;
@@ -54,7 +49,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	public MyCanvas() {
 		
 		//read the view file to create the view matrix
-		openViewFile();
+		openViewFile("ex2.viw.txt");
 		
 		//initialize the current matrix and the total matrix
 		totalTrans = Transformation.IdentityMatrix(3);
@@ -65,7 +60,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		vectorEnd = new double[2];
 		
 		//read the vertices and the edges for the file
-		openScreenFile();
+		openScreenFile("ex2.scn.txt");
 		
 		//set the clip object for clipping
 		clipObj = new Clip(viewWidth, viewHigh, margins);
@@ -73,13 +68,14 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 		addKeyListener(this);
 		addMouseListener(this);
 		addMouseMotionListener(this);
+		addComponentListener(this);
 	}
 	
 	/**
 	 * open the screen file and set the vertices and the edges according 
 	 * to the data in the file.
 	 */
-	public void openScreenFile() {
+	public void openScreenFile(String scnFile) {
 		File screenFile = new File(scnFile);
 		try {
 			Scanner scan = new Scanner(screenFile);
@@ -113,7 +109,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	 * open the view file and set the view matrix according to the data
 	 * in the file. also set the center and the size according to that data.
 	 */
-	public void openViewFile() {
+	public void openViewFile(String viwFile) {
 		
 		double coordinateX = 0, coordinateY = 0;
 		double direction = 0;
@@ -141,22 +137,21 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+
+		//set the center vertex
+		centerX = viewWidth / 2 + margins;
+		centerY = viewHigh / 2 + margins;
 		
 		//create the view matrix
 		trans1 = Transformation.TranslateMatrix2D(-coordinateX, -coordinateY);
 		rotate1 = Transformation.RotateMatrix2D(-1 * Math.toRadians(direction));
 		scale1 = Transformation.ScaleMatrix2D(viewWidth / windowWidth, (-1) * viewHigh / windowHigh);
-		trans2 = Transformation.TranslateMatrix2D(viewWidth/2 + 20, viewHigh/2 + 20);
+		trans2 = Transformation.TranslateMatrix2D(centerX, centerY);
 			
 		viewMatrix = Mathematics.multMatrixs(trans2, scale1);
 		viewMatrix = Mathematics.multMatrixs(viewMatrix, rotate1);
 		viewMatrix = Mathematics.multMatrixs(viewMatrix, trans1);
 		
-		
-		//set the center vertex
-		centerX = (viewWidth / 2) + margins;
-		centerY = (viewHigh / 2) + margins;
-
 		setSize((int)viewWidth + 40, (int)viewHigh + 40);				
 	}
 	
@@ -407,8 +402,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	        
 	        //use the file according to his type
 	        if(newFile.toLowerCase().endsWith("scn.txt")) {
-	        	scnFile = newFile;
-	        	openScreenFile();
+	        	openScreenFile(newFile);
 	        	
 	        	//initialize the current matrix and the total matrix
 	    		totalTrans = Transformation.IdentityMatrix(3);
@@ -416,8 +410,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	    		
 	        	this.repaint();
 	        } else if(newFile.toLowerCase().endsWith("viw.txt")) {
-	        	viwFile = newFile;
-	        	openViewFile();
+	        	openViewFile(newFile);
 	        	
 	        	//initialize the current matrix and the total matrix
 	    		totalTrans = Transformation.IdentityMatrix(3);
@@ -436,7 +429,28 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 	@Override
 	public void componentResized(ComponentEvent e) {
 		// TODO Auto-generated method stub
+		//do here stuff for resize
+		Dimension newSize = e.getComponent().getBounds().getSize();
 		
+		//change the view matrix, cancel the last scale and trans and apply new data
+		double[][] scale1 = Transformation.ScaleMatrix2D(newSize.width / viewWidth, newSize.height / viewHigh);
+		double[][] trans2 = Transformation.TranslateMatrix2D(-centerX, -centerY);
+		viewMatrix = Mathematics.multMatrixs(viewMatrix, trans2);
+		
+		//update the new data		
+		viewHigh = newSize.height - margins*2;
+		viewWidth = newSize.width - margins*2;
+		
+		//set the new center vertex
+		centerX = viewWidth / 2 + margins;
+		centerY = viewHigh / 2 + margins;
+		
+		double[][] trans3 = Transformation.TranslateMatrix2D(centerX, centerY);
+		viewMatrix = Mathematics.multMatrixs(viewMatrix, trans3);
+		viewMatrix = Mathematics.multMatrixs(viewMatrix, scale1);
+		
+		
+		//setSize((int)viewWidth + 40, (int)viewHigh + 40);
 	}
 	
 	@Override

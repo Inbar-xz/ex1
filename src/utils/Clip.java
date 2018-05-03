@@ -25,11 +25,9 @@ public class Clip {
 		Vertex vStart = line.getV1();
 		Vertex vEnd = line.getV2();
 		
-		int vStartBit, vEndBit;
-		
 		//create the bit value of each point
-		vStartBit = bitValue(vStart);
-		vEndBit = bitValue(vEnd);
+		int vStartBit = bitValue(vStart);
+		int vEndBit = bitValue(vEnd);
 		
 		//if it's not zero, then the line outside the window
 		if ((vStartBit & vEndBit) != 0) {
@@ -59,38 +57,22 @@ public class Clip {
 		List<Double> validT = new ArrayList<Double>();
 		double[] N = new double[2];
 		
-		//if there is intersection with the left side of the window
-		if ((vStartBit & 0x8) != 0) {
-			
-			//use the points (xMin, yMax), (xMin, yMin) to create normal to the window side
-			N[0] = yMax - yMin;
-			N[1] = 0;
-			
-			//create the vector from Q = (xMin, yMax) to vStart
-			double [] QTovStart = new double[2];
-			QTovStart[0] = vStart.getX() - xMin;
-			QTovStart[1] = vStart.getY() - yMax;
-			
-			calculateT(QTovStart, N, vStartTovEnd, startToEndLen, validT);
-		}
+		//if there is intersection with the down(up in the screen) side of the window
+		if ((vStartBit & 0x1) != 0) {
+					
+			//use the points (xMax, yMin), (xMin, yMin) to create normal to the window side
+			N[0] = 0;
+			N[1] = xMin - xMax;
 		
-		//if there is intersection with the right side of the window
-		if ((vStartBit & 0x4) != 0) {
-			
-			//use the points (xMax, yMin), (xMax, yMax) to create normal to the window side
-			//V = (xMax - xMax, yMax - yMin)
-			N[0] = yMin - yMax;
-			N[1] = 0;
-			
 			//create the vector from Q = (xMax, yMin) to vStart
 			double [] QTovStart = new double[2];
 			QTovStart[0] = vStart.getX() - xMax;
 			QTovStart[1] = vStart.getY() - yMin;
-			
+					
 			calculateT(QTovStart, N, vStartTovEnd, startToEndLen, validT);
 		}
 		
-		//if there is intersection with the top(down) side of the window
+		//if there is intersection with the top(down in the screen) side of the window
 		if ((vStartBit & 0x2) != 0) {
 			
 			//use the points (xMax, yMax), (xMin, yMax) to create normal to the window side
@@ -105,13 +87,14 @@ public class Clip {
 			calculateT(QTovStart, N, vStartTovEnd, startToEndLen, validT);
 		}
 		
-		//if there is intersection with the down(up) side of the window
-		if ((vStartBit & 0x1) != 0) {
-			
-			//use the points (xMax, yMin), (xMin, yMin) to create normal to the window side
-			N[0] = 0;
-			N[1] = xMin - xMax;
-			
+		//if there is intersection with the right side of the window
+		if ((vStartBit & 0x4) != 0) {
+					
+			//use the points (xMax, yMin), (xMax, yMax) to create normal to the window side
+			//V = (xMax - xMax, yMax - yMin)
+			N[0] = yMin - yMax;
+			N[1] = 0;
+					
 			//create the vector from Q = (xMax, yMin) to vStart
 			double [] QTovStart = new double[2];
 			QTovStart[0] = vStart.getX() - xMax;
@@ -120,16 +103,33 @@ public class Clip {
 			calculateT(QTovStart, N, vStartTovEnd, startToEndLen, validT);
 		}
 		
+		//if there is intersection with the left side of the window
+		if ((vStartBit & 0x8) != 0) {
+					
+			//use the points (xMin, yMax), (xMin, yMin) to create normal to the window side
+			N[0] = yMax - yMin;
+			N[1] = 0;
+					
+			//create the vector from Q = (xMin, yMax) to vStart
+			double [] QTovStart = new double[2];
+			QTovStart[0] = vStart.getX() - xMin;
+			QTovStart[1] = vStart.getY() - yMax;
+			
+			calculateT(QTovStart, N, vStartTovEnd, startToEndLen, validT);
+		}
+		
+		//in case no valid t was found
 		if (validT.isEmpty()) {
 			return null;
 		}
 		
-		//find the minimal/maximal t
-		double angle2 = Math.atan2(vStartTovEnd[0],vStartTovEnd[1]) - Math.atan2(N[0], N[1]);
-		double vecDirection = startToEndLen * Math.cos(Math.toRadians(angle2));
+		//find the intersection point :D
+		double EdgeToNAngle = Math.atan2(vStartTovEnd[0],vStartTovEnd[1]) - Math.atan2(N[0], N[1]);
+		double vecDirection = startToEndLen * Math.cos(Math.toRadians(EdgeToNAngle));
 		double x, y;
 		Vertex interPoint;
 		
+		//find the minimal t
 		if (vecDirection > 0) {
 			double min = validT.get(0);
 			for (int i = 0; i < validT.size(); i++) {
@@ -167,9 +167,9 @@ public class Clip {
 		System.out.println(Math.toDegrees(QTovStartAngle));
 		
 		//calculate the denominator of the t formula
-		double angle2 = Math.atan2( vStartTovEnd[0]*N[1] -vStartTovEnd[1]*N[0], vStartTovEnd[0]*N[0] + vStartTovEnd[1]*N[1]);
-		double denominator = -Mathematics.vectorLength(N) * startToEndLen * Math.cos(angle2);
-		System.out.println("line to N " + Math.toDegrees(angle2));
+		double EdgeToNAngle = Math.atan2( vStartTovEnd[0]*N[1] -vStartTovEnd[1]*N[0], vStartTovEnd[0]*N[0] + vStartTovEnd[1]*N[1]);
+		double denominator = -Mathematics.vectorLength(N) * startToEndLen * Math.cos(EdgeToNAngle);
+		System.out.println("line to N " + Math.toDegrees(EdgeToNAngle));
 		
 		//calculate the t and add to the list
 		double newT = (Mathematics.vectorLength(N) * QTovStartLen * Math.cos(QTovStartAngle)) / denominator;
