@@ -2,14 +2,17 @@
 //id: yakir - 203200530 inbar - 204885370.
 package maindraw;
 
+import java.awt.BorderLayout;
 import java.awt.Canvas;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FileDialog;
 import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Polygon;
+import java.awt.Window;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.KeyEvent;
@@ -397,8 +400,7 @@ public class MyCanvas extends Canvas implements MouseListener,  MouseMotionListe
 			currentTrans = Transformation.IdentityMatrix(3);
 			
 			//set the window to the original size
-			setSize((int)viwWidthSave + margins * 2, (int)viwHighSave + margins * 2);
-			setPreferredSize(new Dimension((int)viwWidthSave + margins * 2, (int)viwHighSave + margins * 2));
+			this.setSize((int)viwWidthSave + margins * 2, (int)viwHighSave + margins * 2);
 	    	
 			//draw
 	    	this.repaint();
